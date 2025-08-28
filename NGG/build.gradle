@@ -1,0 +1,44 @@
+apply plugin: 'com.android.library'
+
+android {
+    namespace 'com.bzlzhh.ng_gl4es'
+    compileSdk 35
+
+    defaultConfig {
+        
+        minSdk 21
+        targetSdk 35
+
+        externalNativeBuild {
+            cmake {
+                cppFlags ""
+            }
+        }
+
+        ndk {
+            stl "c++_static"
+            //noinspection ChromeOsAbiSupport
+            abiFilters 'arm64-v8a'
+        }
+
+        ndkVersion "27.2.12479018"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "NG-GL4ES/CMakeLists.txt"
+        }
+    }
+}
+
+dependencies {
+    implementation libs.androidx.appcompat
+    implementation libs.core.ktx
+}

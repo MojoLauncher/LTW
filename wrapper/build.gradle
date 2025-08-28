@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace 'git.artdeell.gl4eswrapper'
+    namespace 'git.git.artdeell.gl4eswrapper'
     compileSdk 33
 
     defaultConfig {
@@ -28,6 +28,6 @@ android {
 }
 
 dependencies {
-    implementation project(path: ':ltw')
+    implementation project(path: ':NGG')
 }
 
