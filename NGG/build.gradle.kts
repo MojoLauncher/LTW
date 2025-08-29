@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace = "com.bzlzhh.ng_gl4es"
-    compileSdk = 36
+    compileSdk = 34
 
     defaultConfig {
         minSdk = 21
