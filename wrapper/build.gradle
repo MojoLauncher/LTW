@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace 'git.git.artdeell.gl4eswrapper'
-    compileSdk 33
+    compileSdk 36
 
     defaultConfig {
         applicationId "git.artdeell.gl4eswrapper"
         minSdk 21
-        targetSdk 33
+        targetSdk 36
         versionCode 1
         versionName "1.0"
     }
@@ -28,6 +28,5 @@ android {
 }
 
 dependencies {
-    implementation project(path: ':NGG')
+    implementation project(':NGG')
 }
-
