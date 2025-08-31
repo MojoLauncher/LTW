@@ -9,6 +9,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: clone NGG
+      run: |
+        cd NGG
+        git clone https://github.com/ItsWinterBush26/NG-GL4ES.git
   
     - name: set up JDK 11
       uses: actions/setup-java@v4
