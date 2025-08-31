@@ -16,7 +16,7 @@ android {
 
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -24,9 +24,7 @@ android {
         }
         create("proguard") {
             isMinifyEnabled = true
-            initWith(getByName("debug"))
-        }
-        create("fordebug") {
+            initWith(getByName("release"))
         }
     }
     externalNativeBuild {
