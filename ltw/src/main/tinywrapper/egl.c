@@ -92,7 +92,7 @@ void add_extra_extension(context_t* context, int* length, const char* extension)
     int extension_idx = context->nextras++;
     context->extra_extensions_array = realloc(context->extra_extensions_array, sizeof(char*)*context->nextras);
     char* extra_extension = malloc(extension_len + 1);
-    strncpy(extra_extension, extension, extension_len);
+    strncpy(extra_extension, extension, extension_len + 1);
     context->extra_extensions_array[extension_idx] = extra_extension;
 }
 
@@ -116,8 +116,10 @@ void build_extension_string(context_t* context) {
         else printf("LTW: The buffer storage extension is hidden.\n");
     }
     if(context->buffer_texture_ext || context->es32) {
-        add_extra_extension(context, &length, "ARB_texture_buffer_object");
+        add_extra_extension(context, &length, "GL_ARB_texture_buffer_object");
     }
+    add_extra_extension(context, &length, "GL_ARB_draw_elements_base_vertex");
+
     // More extensions are possible, but will need way more wraps and tracking.
     fin_extra_extensions(context, length);
 }

@@ -296,12 +296,10 @@ void glFlushMappedBufferRange( 	GLenum target,
 
 const GLubyte* glGetStringi(GLenum name, GLuint index) {
     if(!current_context || name != GL_EXTENSIONS) return NULL;
-    if(index < current_context->nextensions_es) {
-        return es3_functions.glGetStringi(name, index);
-    }else {
-        int extra_index = index - current_context->nextensions_es;
-        if(extra_index >= current_context->nextras) return NULL;
-        return (const GLubyte*)current_context->extra_extensions_array[extra_index];
+    if(index >= current_context->nextras) {
+        return es3_functions.glGetStringi(name, index - current_context->nextras);
+    } else {
+        return (const GLubyte*)current_context->extra_extensions_array[index];
     }
 }
 
@@ -422,6 +420,7 @@ void glGetIntegerv(GLenum pname, GLint* data) {
         case GL_NUM_EXTENSIONS:
             es3_functions.glGetIntegerv(pname, data);
             (*data) += current_context->nextras;
+            printf("GL_NUM_EXTENSIONS: %i\n", (*data));
             break;
         case GL_MAX_COLOR_ATTACHMENTS:
             *data = MAX_FBTARGETS;
