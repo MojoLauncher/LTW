@@ -478,7 +478,7 @@ IR_TO_GLSL::print_var_name(ir_variable* v)
 			if (v->data.mode == ir_var_temporary)
 				generated_source.append("tmpvar_%d", (int)id);
 			else
-				generated_source.append("%s_%d", v->name, (int)id);
+				generated_source.append("%sB_%d", v->name, (int)id);
 		}
 		else
 		{
@@ -1386,27 +1386,6 @@ IR_TO_GLSL::visit(ir_texture* ir)
 	ir->sampler->accept(this);
 	generated_source.append(", ");
 
-	// texture coordinate
-	
-        if(sampler_uv_dim > 4) { // samplerCubeArrayShadow (jesus christ)
-		ir->coordinate->accept(this);
-		generated_source.append(", ");
-		ir->shadow_comparator->accept(this); // the "float compare" bit, because khronos people were not crazy enough for vec5
-        }else if(is_shadow || is_proj) { // these two need to generate a new vector because of the split
-		generated_source.append("vec%i(", sampler_uv_dim); 
-		ir->coordinate->accept(this);
-		if(is_shadow) {
-			generated_source.append(", ");
-			ir->shadow_comparator->accept(this);
-		}
-		if(is_proj) {
-			generated_source.append(", ");
-			ir->projector->accept(this);
-		}
-		generated_source.append(")");
-	}else {
-		ir->coordinate->accept(this); // accept as usual if the function aint wacky
-	}
     GLenum type_enum = ir->sampler->type->gl_type;
     bool buffer_texture_sampler;
     switch(type_enum) {
@@ -1421,6 +1400,40 @@ IR_TO_GLSL::visit(ir_texture* ir)
         default:
             buffer_texture_sampler = false;
     }
+
+    bool txf_mali_workaround = false;
+
+	// texture coordinate
+    if(sampler_uv_dim > 4) { // samplerCubeArrayShadow (jesus christ)
+        ir->coordinate->accept(this);
+        generated_source.append(", ");
+        ir->shadow_comparator->accept(this); // the "float compare" bit, because khronos people were not crazy enough for vec5
+    }else if(is_shadow || is_proj) { // these two need to generate a new vector because of the split
+        generated_source.append("vec%i(", sampler_uv_dim);
+        ir->coordinate->accept(this);
+        if(is_shadow) {
+            generated_source.append(", ");
+            ir->shadow_comparator->accept(this);
+        }
+        if(is_proj) {
+            generated_source.append(", ");
+            ir->projector->accept(this);
+        }
+        generated_source.append(")");
+    }else {
+        // Hack: prevent tons of faults on Mali for out of bounds txf
+        if(buffer_texture_sampler && (ir->op == ir_txf || ir->op == ir_txf_ms)) {
+            txf_mali_workaround = true;
+            generated_source.append("(");
+            ir->coordinate->accept(this);
+            generated_source.append(") %% textureSize(");
+            ir->sampler->accept(this);
+            generated_source.append(")");
+        }else {
+            ir->coordinate->accept(this);
+        }
+    }
+
 	// lod
     // Don't print LOD if fetching texel from buffer texture
     bool is_txf_from_buffer_texture = ir->op == ir_txf && buffer_texture_sampler;
