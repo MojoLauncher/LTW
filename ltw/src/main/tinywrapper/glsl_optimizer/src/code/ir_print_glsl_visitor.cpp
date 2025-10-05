@@ -334,9 +334,14 @@ char * IR_TO_GLSL::Convert(
 				s->name);
 			for (unsigned j = 0; j < s->length; j++)
 			{
+                const glsl_type* type = (&s->fields.structure[j])->type;
 				res.append("\t");
-				print_type(res, s->fields.structure[j].type, false);
-				res.append(" %s;\n", s->fields.structure[j].name);
+				print_type(res, type, false);
+				res.append(" %s", (&s->fields.structure[j])->name);
+                if(type->is_array()) {
+                    res.append("[%i]",type->length);
+                }
+                res.append(";\n");
 			}
 			res.append("};\n");
 		}
