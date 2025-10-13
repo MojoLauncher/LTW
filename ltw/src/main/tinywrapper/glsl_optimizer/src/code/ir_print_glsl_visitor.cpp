@@ -1406,8 +1406,6 @@ IR_TO_GLSL::visit(ir_texture* ir)
             buffer_texture_sampler = false;
     }
 
-    bool txf_mali_workaround = false;
-
 	// texture coordinate
     if(sampler_uv_dim > 4) { // samplerCubeArrayShadow (jesus christ)
         ir->coordinate->accept(this);
@@ -1426,17 +1424,7 @@ IR_TO_GLSL::visit(ir_texture* ir)
         }
         generated_source.append(")");
     }else {
-        // Hack: prevent tons of faults on Mali for out of bounds txf
-        if(buffer_texture_sampler && (ir->op == ir_txf || ir->op == ir_txf_ms)) {
-            txf_mali_workaround = true;
-            generated_source.append("(");
-            ir->coordinate->accept(this);
-            generated_source.append(") %% textureSize(");
-            ir->sampler->accept(this);
-            generated_source.append(")");
-        }else {
-            ir->coordinate->accept(this);
-        }
+        ir->coordinate->accept(this);
     }
 
 	// lod
