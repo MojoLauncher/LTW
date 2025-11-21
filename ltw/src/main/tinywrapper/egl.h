@@ -62,6 +62,10 @@ typedef struct {
     bool context_rdy;
     bool es31, es32, buffer_storage, buffer_texture_ext, multidraw_indirect;
     PFNGLDRAWELEMENTSBASEVERTEXPROC drawelementsbasevertex;
+    PFNGLBLENDEQUATIONIPROC blendequationi;
+    PFNGLBLENDEQUATIONSEPARATEIPROC blendequationseparatei;
+    PFNGLBLENDFUNCIPROC blendfunci;
+    PFNGLBLENDFUNCSEPARATEIPROC blendfuncseparatei;
     GLint shader_version;
     basevertex_renderer_t basevertex;
     GLuint multidraw_element_buffer;

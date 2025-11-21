@@ -120,7 +120,7 @@ void build_extension_string(context_t* context) {
     }
     add_extra_extension(context, &length, "GL_ARB_draw_elements_base_vertex");
 
-    // Required by Iris
+    // Required by Iris. Indexed variants are available since ES3.2 or with OES/EXT_draw_buffers_indexed extension
     add_extra_extension(context, &length, "GL_ARB_draw_buffers_blend");
 
     // More extensions are possible, but will need way more wraps and tracking.
@@ -159,6 +159,34 @@ static void find_esversion(context_t* context) {
     else if(basevertex_oes) context->drawelementsbasevertex = es3_functions.glDrawElementsBaseVertexOES;
     else if(basevertex_ext) context->drawelementsbasevertex = es3_functions.glDrawElementsBaseVertexEXT;
     else context->drawelementsbasevertex = NULL;
+
+    bool drawbuffersi_oes = strstr(extensions, "GL_OES_draw_buffers_indexed");
+    bool drawbuffersi_ext = strstr(extensions, "GL_EXT_draw_buffers_indexed");
+    if(context->es32){
+        context->blendequationi = es3_functions.glBlendEquationi;
+        context->blendequationseparatei = es3_functions.glBlendEquationSeparatei;
+        context->blendfunci = es3_functions.glBlendFunci;
+        context->blendfuncseparatei = es3_functions.glBlendFuncSeparatei;
+    }
+    else if(drawbuffersi_oes){
+        context->blendequationi = es3_functions.glBlendEquationiOES;
+        context->blendequationseparatei = es3_functions.glBlendEquationSeparateiOES;
+        context->blendfunci = es3_functions.glBlendFunciOES;
+        context->blendfuncseparatei = es3_functions.glBlendFuncSeparateiOES;
+    }
+    else if(drawbuffersi_ext){
+        context->blendequationi = es3_functions.glBlendEquationiEXT;
+        context->blendequationseparatei = es3_functions.glBlendEquationSeparateiEXT;
+        context->blendfunci = es3_functions.glBlendFunciEXT;
+        context->blendfuncseparatei = es3_functions.glBlendFuncSeparateiEXT;
+    }
+    else {
+        context->blendequationi = NULL;
+        context->blendequationseparatei = NULL;
+        context->blendfunci = NULL;
+        context->blendfuncseparatei = NULL;
+    }
+
 
     build_extension_string(context);
 
