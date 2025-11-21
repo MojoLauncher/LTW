@@ -120,6 +120,9 @@ void build_extension_string(context_t* context) {
     }
     add_extra_extension(context, &length, "GL_ARB_draw_elements_base_vertex");
 
+    // Required by Iris
+    add_extra_extension(context, &length, "GL_ARB_draw_buffers_blend");
+
     // More extensions are possible, but will need way more wraps and tracking.
     fin_extra_extensions(context, length);
 }
