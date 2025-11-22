@@ -7,9 +7,6 @@
 #include "egl.h"
 #include "proc.h"
 
-#include "blending.h"
-
-
 void glBlendEquationi(GLuint buf, GLenum mode){
     if(!current_context || !current_context->blending_indexed)
         return;

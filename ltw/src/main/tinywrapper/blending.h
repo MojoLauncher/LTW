@@ -1,8 +1,0 @@
-//
-// Created by whbex on 22.11.2025.
-//
-
-#ifndef GL4ES_WRAPPER_BLENDING_H
-#define GL4ES_WRAPPER_BLENDING_H
-
-#endif //GL4ES_WRAPPER_BLENDING_H
