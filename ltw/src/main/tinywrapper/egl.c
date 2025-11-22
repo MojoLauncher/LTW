@@ -163,37 +163,26 @@ static void find_esversion(context_t* context) {
     bool drawbuffersi_ext = strstr(extensions, "GL_EXT_draw_buffers_indexed");
     blending_functions_t* blend = &current_context->blending;
     blend->available = true;
+#define SET_FUNC(type) \
+    blend->blendequationi = es3_functions.glBlendEquationi ## type; \
+    blend->blendequationseparatei = es3_functions.glBlendEquationSeparatei ## type; \
+    blend->blendfunci = es3_functions.glBlendFunci ## type; \
+    blend->blendfuncseparatei = es3_functions.glBlendFuncSeparatei ## type; \
+    blend->colormaski = es3_functions.glColorMaski ## type; \
+
     if(context->es32){
-        blend->blendequationi = es3_functions.glBlendEquationi;
-        blend->blendequationseparatei = es3_functions.glBlendEquationSeparatei;
-        blend->blendfunci = es3_functions.glBlendFunci;
-        blend->blendfuncseparatei = es3_functions.glBlendFuncSeparatei;
-        blend->colormaski = es3_functions.glColorMaski;
+        SET_FUNC()
     }
     else if(drawbuffersi_oes){
-        blend->blendequationi = es3_functions.glBlendEquationiOES;
-        blend->blendequationseparatei = es3_functions.glBlendEquationSeparateiOES;
-        blend->blendfunci = es3_functions.glBlendFunciOES;
-        blend->blendfuncseparatei = es3_functions.glBlendFuncSeparateiOES;
-        blend->colormaski = es3_functions.glColorMaskiOES;
+        SET_FUNC(OES)
     }
     else if(drawbuffersi_ext){
-        blend->blendequationi = es3_functions.glBlendEquationiEXT;
-        blend->blendequationseparatei = es3_functions.glBlendEquationSeparateiEXT;
-        blend->blendfunci = es3_functions.glBlendFunciEXT;
-        blend->blendfuncseparatei = es3_functions.glBlendFuncSeparateiEXT;
-        blend->colormaski = es3_functions.glColorMaskiEXT;
+        SET_FUNC(EXT)
     }
     else {
-        blend->blendequationi = NULL;
-        blend->blendequationseparatei = NULL;
-        blend->blendfunci = NULL;
-        blend->blendfuncseparatei = NULL;
-        blend->colormaski = NULL;
         blend->available = false;
     }
-
-
+#undef SET_FUNC
     build_extension_string(context);
 
     return;

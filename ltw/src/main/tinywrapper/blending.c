@@ -7,48 +7,21 @@
 #include "egl.h"
 #include "proc.h"
 
-void glBlendEquationi(GLuint buf, GLenum mode){
-    if(!current_context || !current_context->blending.available)
-        return;
-    current_context->blending.blendequationi(buf, mode);
+#define GL_BLEND_FUNC(name, func, args, ...) \
+void name args {                          \
+    if(!current_context || !current_context->blending.available) \
+        return;                                         \
+    current_context->blending.func(__VA_ARGS__);                                         \
 }
-void glBlendEquationSeparatei(GLuint buf, GLenum modeRGB, GLenum modeAlpha){
-    if(!current_context || !current_context->blending.available)
-        return;
-    current_context->blending.blendequationseparatei(buf, modeRGB, modeAlpha);
-}
-void glBlendFunci(GLuint buf, GLenum src, GLenum dst){
-    if(!current_context || !current_context->blending.available)
-        return;
-    current_context->blending.blendfunci(buf, src, dst);
-}
-void glColorMaski(GLuint index, GLboolean r, GLboolean g, GLboolean b, GLboolean a){
-    if(!current_context || !current_context->blending.available)
-        return;
-    current_context->blending.colormaski(index, r, g, b, a);
-}
-void glBlendFuncSeparatei(GLuint buf, GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha){
-    if(!current_context || !current_context->blending.available)
-        return;
-    current_context->blending.blendfuncseparatei(buf, srcRGB, dstRGB, srcAlpha, dstAlpha);
-}
-void glBlendEquationiARB(GLuint buf, GLenum mode){
-    if(!current_context || !current_context->blending.available)
-        return;
-    current_context->blending.blendequationi(buf, mode);
-}
-void glBlendEquationSeparateiARB(GLuint buf, GLenum modeRGB, GLenum modeAlpha){
-    if(!current_context || !current_context->blending.available)
-        return;
-    current_context->blending.blendequationseparatei(buf, modeRGB, modeAlpha);
-}
-void glBlendFunciARB(GLuint buf, GLenum src, GLenum dst){
-    if(!current_context || !current_context->blending.available)
-        return;
-    current_context->blending.blendfunci(buf, src, dst);
-}
-void glBlendFuncSeparateiARB(GLuint buf, GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha){
-    if(!current_context || !current_context->blending.available)
-        return;
-    current_context->blending.blendfuncseparatei(buf, srcRGB, dstRGB, srcAlpha, dstAlpha);
-}
+
+GL_BLEND_FUNC(glBlendEquationi, blendequationi, (GLuint buf, GLenum mode), buf, mode)
+GL_BLEND_FUNC(glBlendEquationSeparatei, blendequationseparatei, (GLuint buf, GLenum modeRGB, GLenum modeAlpha), buf, modeRGB, modeAlpha)
+GL_BLEND_FUNC(glBlendFunci, blendfunci, (GLuint buf, GLenum src, GLenum dst), buf, src, dst)
+GL_BLEND_FUNC(glBlendFuncSeparatei, blendfuncseparatei, (GLuint buf, GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha),
+              buf, srcRGB, dstRGB, srcAlpha, dstAlpha)
+GL_BLEND_FUNC(glColorMaski, colormaski, (GLuint index, GLboolean r, GLboolean g, GLboolean b, GLboolean a), index, r, g, b, a)
+GL_BLEND_FUNC(glBlendEquationiARB, blendequationi, (GLuint buf, GLenum mode), buf, mode)
+GL_BLEND_FUNC(glBlendEquationSeparateiARB, blendequationseparatei, (GLuint buf, GLenum modeRGB, GLenum modeAlpha), buf, modeRGB, modeAlpha)
+GL_BLEND_FUNC(glBlendFunciARB, blendfunci, (GLuint buf, GLenum src, GLenum dst), buf, src, dst)
+GL_BLEND_FUNC(glBlendFuncSeparateiARB, blendfuncseparatei, (GLuint buf, GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha),
+              buf, srcRGB, dstRGB, srcAlpha, dstAlpha)
