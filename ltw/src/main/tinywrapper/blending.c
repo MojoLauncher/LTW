@@ -25,6 +25,11 @@ void glBlendFunci(GLuint buf, GLenum src, GLenum dst){
         return;
     current_context->blendfunci(buf, src, dst);
 }
+void glColorMaski(GLuint index, GLboolean r, GLboolean g, GLboolean b, GLboolean a){
+    if(!current_context || !current_context->blending_indexed)
+        return;
+    current_context->colormaski(index, r, g, b, a);
+}
 void glBlendFuncSeparatei(GLuint buf, GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha){
     if(!current_context || !current_context->blending_indexed)
         return;
