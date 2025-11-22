@@ -60,7 +60,7 @@ typedef struct {
 typedef struct {
     EGLContext phys_context;
     bool context_rdy;
-    bool es31, es32, buffer_storage, buffer_texture_ext, multidraw_indirect;
+    bool es31, es32, buffer_storage, buffer_texture_ext, multidraw_indirect, blending_indexed;
     PFNGLDRAWELEMENTSBASEVERTEXPROC drawelementsbasevertex;
     PFNGLBLENDEQUATIONIPROC blendequationi;
     PFNGLBLENDEQUATIONSEPARATEIPROC blendequationseparatei;

@@ -119,10 +119,9 @@ void build_extension_string(context_t* context) {
         add_extra_extension(context, &length, "GL_ARB_texture_buffer_object");
     }
     add_extra_extension(context, &length, "GL_ARB_draw_elements_base_vertex");
-
-    // Required by Iris. Indexed variants are available since ES3.2 or with OES/EXT_draw_buffers_indexed extension
-    add_extra_extension(context, &length, "GL_ARB_draw_buffers_blend");
-
+    // Required by Iris. Indexed variants are available since ES3.2 or with OES/EXT_draw_buffers_indexed extensions
+    if(context->blending_indexed)
+        add_extra_extension(context, &length, "GL_ARB_draw_buffers_blend");
     // More extensions are possible, but will need way more wraps and tracking.
     fin_extra_extensions(context, length);
 }
@@ -162,6 +161,7 @@ static void find_esversion(context_t* context) {
 
     bool drawbuffersi_oes = strstr(extensions, "GL_OES_draw_buffers_indexed");
     bool drawbuffersi_ext = strstr(extensions, "GL_EXT_draw_buffers_indexed");
+    context->blending_indexed = true;
     if(context->es32){
         context->blendequationi = es3_functions.glBlendEquationi;
         context->blendequationseparatei = es3_functions.glBlendEquationSeparatei;
@@ -185,6 +185,7 @@ static void find_esversion(context_t* context) {
         context->blendequationseparatei = NULL;
         context->blendfunci = NULL;
         context->blendfuncseparatei = NULL;
+        context->blending_indexed = false;
     }
 
 
