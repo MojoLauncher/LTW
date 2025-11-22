@@ -25,6 +25,15 @@ typedef struct {
 } basevertex_renderer_t;
 
 typedef struct {
+    bool available;
+    PFNGLBLENDEQUATIONIPROC blendequationi;
+    PFNGLBLENDEQUATIONSEPARATEIPROC blendequationseparatei;
+    PFNGLBLENDFUNCIPROC blendfunci;
+    PFNGLBLENDFUNCSEPARATEIPROC blendfuncseparatei;
+    PFNGLCOLORMASKIPROC colormaski;
+} blending_functions_t;
+
+typedef struct {
     GLuint index;
     GLuint buffer;
     bool ranged;
@@ -60,15 +69,11 @@ typedef struct {
 typedef struct {
     EGLContext phys_context;
     bool context_rdy;
-    bool es31, es32, buffer_storage, buffer_texture_ext, multidraw_indirect, blending_indexed;
-    PFNGLDRAWELEMENTSBASEVERTEXPROC drawelementsbasevertex;
-    PFNGLBLENDEQUATIONIPROC blendequationi;
-    PFNGLBLENDEQUATIONSEPARATEIPROC blendequationseparatei;
-    PFNGLBLENDFUNCIPROC blendfunci;
-    PFNGLBLENDFUNCSEPARATEIPROC blendfuncseparatei;
-    PFNGLCOLORMASKIPROC colormaski;
+    bool es31, es32, buffer_storage, buffer_texture_ext, multidraw_indirect;
     GLint shader_version;
     basevertex_renderer_t basevertex;
+    PFNGLDRAWELEMENTSBASEVERTEXPROC drawelementsbasevertex;
+    blending_functions_t blending;
     GLuint multidraw_element_buffer;
     framebuffer_copier_t framebuffer_copier;
     unordered_map* shader_map;

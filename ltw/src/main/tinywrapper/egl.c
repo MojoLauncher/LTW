@@ -120,7 +120,7 @@ void build_extension_string(context_t* context) {
     }
     add_extra_extension(context, &length, "GL_ARB_draw_elements_base_vertex");
     // Required by Iris. Indexed variants are available since ES3.2 or with OES/EXT_draw_buffers_indexed extensions
-    if(context->blending_indexed)
+    if(context->blending.available)
         add_extra_extension(context, &length, "GL_ARB_draw_buffers_blend");
     // More extensions are possible, but will need way more wraps and tracking.
     fin_extra_extensions(context, length);
@@ -161,35 +161,36 @@ static void find_esversion(context_t* context) {
 
     bool drawbuffersi_oes = strstr(extensions, "GL_OES_draw_buffers_indexed");
     bool drawbuffersi_ext = strstr(extensions, "GL_EXT_draw_buffers_indexed");
-    context->blending_indexed = true;
+    blending_functions_t* blend = &current_context->blending;
+    blend->available = true;
     if(context->es32){
-        context->blendequationi = es3_functions.glBlendEquationi;
-        context->blendequationseparatei = es3_functions.glBlendEquationSeparatei;
-        context->blendfunci = es3_functions.glBlendFunci;
-        context->blendfuncseparatei = es3_functions.glBlendFuncSeparatei;
-        context->colormaski = es3_functions.glColorMaski;
+        blend->blendequationi = es3_functions.glBlendEquationi;
+        blend->blendequationseparatei = es3_functions.glBlendEquationSeparatei;
+        blend->blendfunci = es3_functions.glBlendFunci;
+        blend->blendfuncseparatei = es3_functions.glBlendFuncSeparatei;
+        blend->colormaski = es3_functions.glColorMaski;
     }
     else if(drawbuffersi_oes){
-        context->blendequationi = es3_functions.glBlendEquationiOES;
-        context->blendequationseparatei = es3_functions.glBlendEquationSeparateiOES;
-        context->blendfunci = es3_functions.glBlendFunciOES;
-        context->blendfuncseparatei = es3_functions.glBlendFuncSeparateiOES;
-        context->colormaski = es3_functions.glColorMaskiOES;
+        blend->blendequationi = es3_functions.glBlendEquationiOES;
+        blend->blendequationseparatei = es3_functions.glBlendEquationSeparateiOES;
+        blend->blendfunci = es3_functions.glBlendFunciOES;
+        blend->blendfuncseparatei = es3_functions.glBlendFuncSeparateiOES;
+        blend->colormaski = es3_functions.glColorMaskiOES;
     }
     else if(drawbuffersi_ext){
-        context->blendequationi = es3_functions.glBlendEquationiEXT;
-        context->blendequationseparatei = es3_functions.glBlendEquationSeparateiEXT;
-        context->blendfunci = es3_functions.glBlendFunciEXT;
-        context->blendfuncseparatei = es3_functions.glBlendFuncSeparateiEXT;
-        context->colormaski = es3_functions.glColorMaskiEXT;
+        blend->blendequationi = es3_functions.glBlendEquationiEXT;
+        blend->blendequationseparatei = es3_functions.glBlendEquationSeparateiEXT;
+        blend->blendfunci = es3_functions.glBlendFunciEXT;
+        blend->blendfuncseparatei = es3_functions.glBlendFuncSeparateiEXT;
+        blend->colormaski = es3_functions.glColorMaskiEXT;
     }
     else {
-        context->blendequationi = NULL;
-        context->blendequationseparatei = NULL;
-        context->blendfunci = NULL;
-        context->blendfuncseparatei = NULL;
-        context->colormaski = NULL;
-        context->blending_indexed = false;
+        blend->blendequationi = NULL;
+        blend->blendequationseparatei = NULL;
+        blend->blendfunci = NULL;
+        blend->blendfuncseparatei = NULL;
+        blend->colormaski = NULL;
+        blend->available = false;
     }
 
 
