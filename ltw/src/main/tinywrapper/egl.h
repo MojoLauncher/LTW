@@ -66,6 +66,7 @@ typedef struct {
     PFNGLBLENDEQUATIONSEPARATEIPROC blendequationseparatei;
     PFNGLBLENDFUNCIPROC blendfunci;
     PFNGLBLENDFUNCSEPARATEIPROC blendfuncseparatei;
+    PFNGLCOLORMASKIPROC colormaski;
     GLint shader_version;
     basevertex_renderer_t basevertex;
     GLuint multidraw_element_buffer;

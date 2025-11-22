@@ -167,24 +167,28 @@ static void find_esversion(context_t* context) {
         context->blendequationseparatei = es3_functions.glBlendEquationSeparatei;
         context->blendfunci = es3_functions.glBlendFunci;
         context->blendfuncseparatei = es3_functions.glBlendFuncSeparatei;
+        context->colormaski = es3_functions.glColorMaski;
     }
     else if(drawbuffersi_oes){
         context->blendequationi = es3_functions.glBlendEquationiOES;
         context->blendequationseparatei = es3_functions.glBlendEquationSeparateiOES;
         context->blendfunci = es3_functions.glBlendFunciOES;
         context->blendfuncseparatei = es3_functions.glBlendFuncSeparateiOES;
+        context->colormaski = es3_functions.glColorMaskiOES;
     }
     else if(drawbuffersi_ext){
         context->blendequationi = es3_functions.glBlendEquationiEXT;
         context->blendequationseparatei = es3_functions.glBlendEquationSeparateiEXT;
         context->blendfunci = es3_functions.glBlendFunciEXT;
         context->blendfuncseparatei = es3_functions.glBlendFuncSeparateiEXT;
+        context->colormaski = es3_functions.glColorMaskiEXT;
     }
     else {
         context->blendequationi = NULL;
         context->blendequationseparatei = NULL;
         context->blendfunci = NULL;
         context->blendfuncseparatei = NULL;
+        context->colormaski = NULL;
         context->blending_indexed = false;
     }
 
