@@ -161,7 +161,7 @@ static void find_esversion(context_t* context) {
 
     bool drawbuffersi_oes = strstr(extensions, "GL_OES_draw_buffers_indexed");
     bool drawbuffersi_ext = strstr(extensions, "GL_EXT_draw_buffers_indexed");
-    blending_functions_t* blend = &current_context->blending;
+    blending_functions_t* blend = &context->blending;
     blend->available = true;
 #define SET_FUNC(type) \
     blend->blendequationi = es3_functions.glBlendEquationi ## type; \
