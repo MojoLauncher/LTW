@@ -17,3 +17,8 @@ void glGetQueryObjectui64v(GLuint id, GLenum pname, uint64_t* params){
         return;
     current_context->query.getQueryObjectui64v(id, pname, params);
 }
+void glQueryCounter(GLuint id, GLenum target){
+    if(!current_context || !current_context->query.available)
+        return;
+    current_context->query.queryCounter(id, target);
+}
