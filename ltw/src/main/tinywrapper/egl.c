@@ -161,6 +161,7 @@ static void find_esversion(context_t* context) {
         context->query.available = true;
         context->query.getQueryObjecti64v = es3_functions.glGetQueryObjecti64vEXT;
         context->query.getQueryObjectui64v = es3_functions.glGetQueryObjectui64vEXT;
+        context->query.queryCounter = es3_functions.glQueryCounterEXT;
     }
     else context->query.available = false;
 

@@ -37,6 +37,7 @@ typedef struct {
     bool available;
     PFNGLGETQUERYOBJECTI64VEXTPROC getQueryObjecti64v;
     PFNGLGETQUERYOBJECTUI64VEXTPROC getQueryObjectui64v;
+    PFNGLQUERYCOUNTEREXTPROC queryCounter;
 } query_functions_t;
 
 typedef struct {
