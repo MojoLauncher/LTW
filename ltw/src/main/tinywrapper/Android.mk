@@ -395,6 +395,7 @@ LOCAL_SRC_FILES := \
     glformats.c \
     basevertex.c \
     blending.c \
+    query.c \
     shader_wrapper.c \
     string_utils.c \
     framebuffer.c \

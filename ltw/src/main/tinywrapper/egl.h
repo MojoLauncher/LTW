@@ -34,6 +34,12 @@ typedef struct {
 } blending_functions_t;
 
 typedef struct {
+    bool available;
+    PFNGLGETQUERYOBJECTI64VEXTPROC getQueryObjecti64v;
+    PFNGLGETQUERYOBJECTUI64VEXTPROC getQueryObjectui64v;
+} query_functions_t;
+
+typedef struct {
     GLuint index;
     GLuint buffer;
     bool ranged;
@@ -74,6 +80,7 @@ typedef struct {
     basevertex_renderer_t basevertex;
     PFNGLDRAWELEMENTSBASEVERTEXPROC drawelementsbasevertex;
     blending_functions_t blending;
+    query_functions_t query;
     GLuint multidraw_element_buffer;
     framebuffer_copier_t framebuffer_copier;
     unordered_map* shader_map;
