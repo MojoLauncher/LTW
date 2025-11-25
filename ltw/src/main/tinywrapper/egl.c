@@ -159,8 +159,8 @@ static void find_esversion(context_t* context) {
     // on Core Profile it's ARB_timer_query instead
     if(strstr(extensions, "GL_EXT_disjoint_timer_query")){
         context->query.available = true;
-        context->query.getQueryObjecti64v = es3_functions.glGetQueryObjecti64v;
-        context->query.getQueryObjectui64v = es3_functions.glGetQueryObjectui64v;
+        context->query.getQueryObjecti64v = es3_functions.glGetQueryObjecti64vEXT;
+        context->query.getQueryObjectui64v = es3_functions.glGetQueryObjectui64vEXT;
     }
     else context->query.available = false;
 
