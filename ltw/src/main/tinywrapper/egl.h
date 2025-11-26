@@ -34,13 +34,6 @@ typedef struct {
 } blending_functions_t;
 
 typedef struct {
-    bool available;
-    PFNGLGETQUERYOBJECTI64VEXTPROC getQueryObjecti64v;
-    PFNGLGETQUERYOBJECTUI64VEXTPROC getQueryObjectui64v;
-    PFNGLQUERYCOUNTEREXTPROC queryCounter;
-} query_functions_t;
-
-typedef struct {
     GLuint index;
     GLuint buffer;
     bool ranged;
@@ -76,7 +69,7 @@ typedef struct {
 typedef struct {
     EGLContext phys_context;
     bool context_rdy;
-    bool es31, es32, buffer_storage, buffer_texture_ext, multidraw_indirect;
+    bool es31, es32, buffer_storage, buffer_texture_ext, multidraw_indirect, timer_query;
     GLint shader_version;
     basevertex_renderer_t basevertex;
     PFNGLDRAWELEMENTSBASEVERTEXPROC drawelementsbasevertex;
