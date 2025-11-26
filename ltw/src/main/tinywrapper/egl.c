@@ -157,7 +157,7 @@ static void find_esversion(context_t* context) {
 
     // EXT_disjoint_timer_query provides accurate int64 timer queries
     // on Core Profile it's ARB_timer_query instead
-    if(strstr(extensions, "GL_EXT_disjoint_timer_query")) context->timer_query = true;
+    if(strstr(extensions, "GL_EXT_disjoint_timer_query") || env_istrue_d("LTW_ENABLE_TIMER_QUERY", false)) context->timer_query = true;
 
     bool basevertex_oes = strstr(extensions, "GL_OES_draw_elements_base_vertex");
     bool basevertex_ext = strstr(extensions, "GL_EXT_draw_elements_base_vertex");
