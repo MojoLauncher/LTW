@@ -74,7 +74,6 @@ typedef struct {
     basevertex_renderer_t basevertex;
     PFNGLDRAWELEMENTSBASEVERTEXPROC drawelementsbasevertex;
     blending_functions_t blending;
-    query_functions_t query;
     GLuint multidraw_element_buffer;
     framebuffer_copier_t framebuffer_copier;
     unordered_map* shader_map;
