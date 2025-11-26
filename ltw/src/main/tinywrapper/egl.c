@@ -123,7 +123,7 @@ void build_extension_string(context_t* context) {
     if(context->blending.available)
         add_extra_extension(context, &length, "GL_ARB_draw_buffers_blend");
     // Used by Minecraft for the GPU usage counter
-    if(context->query.available)
+    if(context->timer_query)
         add_extra_extension(context, &length, "GL_ARB_timer_query");
     // More extensions are possible, but will need way more wraps and tracking.
     fin_extra_extensions(context, length);
