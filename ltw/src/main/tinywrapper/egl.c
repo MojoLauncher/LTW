@@ -122,7 +122,7 @@ void build_extension_string(context_t* context) {
     // Required by Iris. Indexed variants are available since ES3.2 or with OES/EXT_draw_buffers_indexed extensions
     if(context->blending.available)
         add_extra_extension(context, &length, "GL_ARB_draw_buffers_blend");
-    // Used by Minecraft for GPU usage counter
+    // Used by Minecraft for the GPU usage counter
     if(context->query.available)
         add_extra_extension(context, &length, "GL_ARB_timer_query");
     // More extensions are possible, but will need way more wraps and tracking.
@@ -157,13 +157,7 @@ static void find_esversion(context_t* context) {
 
     // EXT_disjoint_timer_query provides accurate int64 timer queries
     // on Core Profile it's ARB_timer_query instead
-    if(strstr(extensions, "GL_EXT_disjoint_timer_query")){
-        context->query.available = true;
-        context->query.getQueryObjecti64v = es3_functions.glGetQueryObjecti64vEXT;
-        context->query.getQueryObjectui64v = es3_functions.glGetQueryObjectui64vEXT;
-        context->query.queryCounter = es3_functions.glQueryCounterEXT;
-    }
-    else context->query.available = false;
+    if(strstr(extensions, "GL_EXT_disjoint_timer_query")) context->timer_query = true;
 
     bool basevertex_oes = strstr(extensions, "GL_OES_draw_elements_base_vertex");
     bool basevertex_ext = strstr(extensions, "GL_EXT_draw_elements_base_vertex");
