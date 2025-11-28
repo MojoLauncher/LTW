@@ -486,17 +486,52 @@ void glTexBufferRangeARB(GLenum target, GLenum internalFormat, GLuint buffer, GL
     glTexBufferRange(target, internalFormat, buffer, offset, size);
 }
 
+static bool subdata_buffer;
+
+void glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const void *data) {
+    if(!current_context) return;
+    if(!subdata_buffer) {
+        es3_functions.glBufferSubData(target, offset, size, data);
+        return;
+    }
+    up_buffer_t *pb = &current_context->up_buffer;
+    es3_functions.glBindBuffer(GL_COPY_READ_BUFFER, pb->buf);
+    if(size > pb->size - pb->used || !pb->buf) {
+        static const GLsizeiptr buffer_size = 16 * 1024 * 1024;
+        printf("Out of upload buffer, recreating\n");
+        if(pb->buf) {
+            es3_functions.glUnmapBuffer(GL_COPY_READ_BUFFER);
+            es3_functions.glDeleteBuffers(1, &pb->buf);
+        }
+        es3_functions.glGenBuffers(1, &pb->buf);
+        es3_functions.glBindBuffer(GL_COPY_READ_BUFFER, pb->buf);
+        const GLbitfield buf_params = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT_EXT;
+        es3_functions.glBufferStorageEXT(GL_COPY_READ_BUFFER, buffer_size, NULL, buf_params);
+        pb->mapped_ptr = es3_functions.glMapBufferRange(GL_COPY_READ_BUFFER, 0, buffer_size, buf_params);
+        pb->size = buffer_size;
+        pb->used = 0;
+        printf("Allocated buffer: %p %d\n", pb->mapped_ptr, pb->size);
+    }
+    memcpy(pb->mapped_ptr + pb->used, data, size);
+    es3_functions.glCopyBufferSubData(GL_COPY_READ_BUFFER, target, pb->used, offset, size);
+    pb->used += size;
+    es3_functions.glBindBuffer(GL_COPY_READ_BUFFER, current_context->bound_buffers[2]);
+    return;
+}
+
 static bool noerror;
 
 __attribute((constructor)) void init_noerror() {
     noerror = env_istrue("LIBGL_NOERROR");
-    debug = env_istrue("LTW_DEBUG");
+    debug = false;
     never_flush_buffers = env_istrue_d("LTW_NEVER_FLUSH_BUFFERS", true);
     coherent_dynamic_storage = env_istrue_d("LTW_COHERENT_DYNAMIC_STORAGE", true);
+    subdata_buffer = env_istrue_d("LTW_SUBDATA_BUFFER", false);
     if(!noerror) printf("LTW will NOT ignore GL errors. This may break mods, consider yourself warned.\n");
     if(coherent_dynamic_storage) printf("LTW will force dynamic storage buffers to be coherent.\n");
     if(debug) printf("LTW will allow GL_DEBUG_OUTPUT to be enabled. Expect massive logs.\n");
     if(never_flush_buffers) printf("LTW will prevent all explicit buffer flushes.\n");
+    if(subdata_buffer) printf("Experimental upload buffer enabled\n");
 }
 
 GLenum glGetError() {

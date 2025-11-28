@@ -67,6 +67,12 @@ typedef struct {
 } texture_swizzle_track_t;
 
 typedef struct {
+    GLuint buf;
+    size_t size, used;
+    char* mapped_ptr;
+} up_buffer_t;
+
+typedef struct {
     EGLContext phys_context;
     bool context_rdy;
     bool es31, es32, buffer_storage, buffer_texture_ext, multidraw_indirect, timer_query;
@@ -74,6 +80,7 @@ typedef struct {
     basevertex_renderer_t basevertex;
     PFNGLDRAWELEMENTSBASEVERTEXPROC drawelementsbasevertex;
     blending_functions_t blending;
+    up_buffer_t up_buffer;
     GLuint multidraw_element_buffer;
     framebuffer_copier_t framebuffer_copier;
     unordered_map* shader_map;
