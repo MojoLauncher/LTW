@@ -307,7 +307,7 @@ const GLubyte* glGetString(GLenum name) {
     if(!current_context) return NULL;
     switch(name) {
         case GL_VERSION:
-            return (const GLubyte*)"3.0 OpenLTW ("__DATE__"/"__TIME__")";
+            return (const GLubyte*)"3.0 OpenLTW (Built on: "__DATE__"/"__TIME__")";
         case GL_SHADING_LANGUAGE_VERSION:
             return (const GLubyte*)"4.60 LTW";
         case GL_VENDOR:
