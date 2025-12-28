@@ -158,7 +158,6 @@ static void find_esversion(context_t* context) {
     // on Core Profile it's ARB_timer_query instead
     // This enables real time queries via mentioned extension, otherwise faked ones are used (see query.c)
     if(strstr(extensions, "GL_EXT_disjoint_timer_query") || env_istrue_d("LTW_ENABLE_TIMER_QUERY", false)) context->timer_query = true;
-    context->timer_query = false;
 
     bool basevertex_oes = strstr(extensions, "GL_OES_draw_elements_base_vertex");
     bool basevertex_ext = strstr(extensions, "GL_EXT_draw_elements_base_vertex");
