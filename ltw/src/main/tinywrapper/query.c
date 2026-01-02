@@ -33,6 +33,27 @@ void glQueryCounter(GLuint id, GLenum target){
     es3_functions.glQueryCounterEXT(id, target);
 }
 
+void glGetQueryObjectiv( 	GLuint id,
+                            GLenum name,
+                            GLint * params) {
+    CTX_CHECK();
+    if(!current_context->timer_query && name == GL_QUERY_RESULT_AVAILABLE){
+        *params = 0;
+        return;
+    }
+    // This is not recommended but i don't care
+    es3_functions.glGetQueryObjectuiv(id, name, (GLuint*)params);
+}
+
+void glGetQueryObjectuiv(GLuint id, GLenum name, GLuint* params){
+    CTX_CHECK();
+    if(!current_context->timer_query && name == GL_QUERY_RESULT_AVAILABLE){
+        *params = 0;
+        return;
+    }
+    es3_functions.glGetQueryObjectuiv(id, name, params);
+}
+
 // Just in case
 void glBeginQuery(GLenum target, GLuint id){
     CTX_CHECK();
