@@ -1,7 +1,6 @@
-## Large Thin Wrapper
-A thin OpenGL core-to-OpenGL ES wrapper, primarily intended for running Minecraft.
-
-# Building
-`./gradlew :ltw:assembleRelease`
-
-After completion, an AAR with native libraries will be available in `ltw/build/outputs/aar/ltw-release.aar`
+Hello author, I am a low-end mobile phone user
+I optimized the rendering method of the LTW renderer
+Used to enhance the performance of Snapdragon 778g
+I want to give all low-end phones
+I am a Chinese person
+Thank you All developers
