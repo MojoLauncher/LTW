@@ -170,7 +170,7 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei widt
     }
       if (target == GL_TEXTURE_2D && (width < 1024 && height <
   1024)) {
-          
+          // 确保纹理参数适合字体渲染
           es3_functions.glTexParameteri(target,
   GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
           es3_functions.glTexParameteri(target,
@@ -266,15 +266,15 @@ void glTexParameterf( 	GLenum target,
       remove_mipmaps(pname, &param);
       make_depthtex_nearest(target, pname, &param);
 
-     
+      // 添加对字体纹理的特殊处理
       if (target == GL_TEXTURE_2D && (pname ==
   GL_TEXTURE_MIN_FILTER || pname == GL_TEXTURE_MAG_FILTER)) {
-         
+          // 将不支持的滤波模式转换为支持的模式
           if (param == GL_LINEAR_MIPMAP_LINEAR || param ==
   GL_NEAREST_MIPMAP_NEAREST ||
               param == GL_NEAREST_MIPMAP_LINEAR || param ==
   GL_LINEAR_MIPMAP_NEAREST) {
-            
+              // 不支持mipmap，使用基本滤波
               param = (param == GL_LINEAR_MIPMAP_LINEAR || param
   == GL_LINEAR_MIPMAP_NEAREST) ? GL_LINEAR : GL_NEAREST;
           }
@@ -387,7 +387,7 @@ const GLubyte* glGetString(GLenum name) {
         case GL_SHADING_LANGUAGE_VERSION:
             return (const GLubyte*)"4.60 LTW";
         case GL_VENDOR:
-            return (const GLubyte*)"artDev, SerpentSpirale, CADIndie";
+            return (const GLubyte*)"artDev, SerpentSpirale, CADIndie, IQge";
         case GL_EXTENSIONS:
             if(current_context->extensions_string != NULL) return (const GLubyte*)current_context->extensions_string;
             return (const GLubyte*)es3_functions.glGetString(GL_EXTENSIONS);
