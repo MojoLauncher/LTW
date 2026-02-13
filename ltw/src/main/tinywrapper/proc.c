@@ -21,12 +21,14 @@ INTERNAL es3_functions_t es3_functions;
 
 static void error_sysegl() {
     __android_log_print(ANDROID_LOG_ERROR, "LTWInit", "Failed to load system EGL: %s", dlerror());
-    abort();
+   // abort();
+   return;
 }
 
 static void error_init(const char* functionName) {
     __android_log_print(ANDROID_LOG_ERROR, "LTWInit", "Failed to load function \"%s\"", functionName);
-    abort();
+  //  abort();
+  return;
 }
 
 static void init_es3_proc() {
@@ -72,7 +74,8 @@ static eglMustCastToProperFunctionPointerType resolve_stub(const char* procname)
 
 static void unknown_stub() {
     printf("Unknown stub! Aborting to produce backtrace...\n");
-    abort();
+   // abort();
+   return;
 }
 
 eglMustCastToProperFunctionPointerType eglGetProcAddress(const char *procname) {
