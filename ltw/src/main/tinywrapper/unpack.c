@@ -263,6 +263,15 @@ void glPixelStoref( 	GLenum pname,
 
 void glPixelStorei( 	GLenum pname,
                        GLint param) {
+                             if(!current_context) return;
+      if (pname == GL_UNPACK_ALIGNMENT) {
+         
+          if (param != 1 && param != 2 && param != 4) {
+              param = 4;  
+          }
+      }
+      es3_functions.glPixelStorei(pname, param);
+      
     switch (pname) {
         case GL_UNPACK_SWAP_BYTES:
             current_context->unpack.swap_bytes = param == GL_TRUE;

@@ -18,7 +18,7 @@
 #include "main.h"
 #include "unpack.h"
 #include "libraryinternal.h"
-#include "env.h"
+#include "env.h" 
 
 void glClearDepth(GLdouble depth) {
     if(!current_context) return;
@@ -168,7 +168,14 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei widt
         current_context->proxy_intformat = internalformat;
         return;
     }
-
+      if (target == GL_TEXTURE_2D && (width < 1024 && height <
+  1024)) {
+          
+          es3_functions.glTexParameteri(target,
+  GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+          es3_functions.glTexParameteri(target,
+  GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      }
     // No data, just initialization
     if(data == NULL) {
         make_format_non_generic(&internalformat, &type, &format);
@@ -249,16 +256,32 @@ void glTexParameterf( 	GLenum target,
     if(!filter_params_float(target, pname, param)) return;
     es3_functions.glTexParameterf(target, pname, param);
 }
-void glTexParameteri( 	GLenum target,
-                         GLenum pname,
-                         GLint param) {
-    if(!current_context) return;
-    if(!filter_params_integer(target, pname, param)) return;
-    if(!filter_params_float(target, pname, (GLfloat)param)) return;
-    remove_mipmaps(pname, &param);
-    make_depthtex_nearest(target, pname, &param);
-    es3_functions.glTexParameteri(target, pname, param);
-}
+  void glTexParameteri(         GLenum target,
+                           GLenum pname,
+                           GLint param) {
+      if(!current_context) return;
+      if(!filter_params_integer(target, pname, param)) return;
+      if(!filter_params_float(target, pname, (GLfloat)param))
+  return;
+      remove_mipmaps(pname, &param);
+      make_depthtex_nearest(target, pname, &param);
+
+     
+      if (target == GL_TEXTURE_2D && (pname ==
+  GL_TEXTURE_MIN_FILTER || pname == GL_TEXTURE_MAG_FILTER)) {
+         
+          if (param == GL_LINEAR_MIPMAP_LINEAR || param ==
+  GL_NEAREST_MIPMAP_NEAREST ||
+              param == GL_NEAREST_MIPMAP_LINEAR || param ==
+  GL_LINEAR_MIPMAP_NEAREST) {
+            
+              param = (param == GL_LINEAR_MIPMAP_LINEAR || param
+  == GL_LINEAR_MIPMAP_NEAREST) ? GL_LINEAR : GL_NEAREST;
+          }
+      }
+
+      es3_functions.glTexParameteri(target, pname, param);
+  }
 
 void glTexParameterfv( 	GLenum target,
                           GLenum pname,
