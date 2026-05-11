@@ -192,9 +192,14 @@ void glShaderSource(GLuint shader, GLsizei count, const GLchar *const*string, co
 
 #undef SRC_LEN
     GLchar* new_source = optimize_shader(target_string, shader_info->shader_type, 460, current_context->shader_version);
-    //printf("\n\n\nShader Result\n%s\n\n\n", new_source);
     if(shader_info->source != NULL) free((void*)shader_info->source);
-    shader_info->source = new_source;
+    if(!new_source) {
+        printf("LTWShdrWp: failed to optimize shader %u, skipping\n", shader);
+        shader_info->source = target_string;
+    } else {
+        //printf("\n\n\nShader Result\n%s\n\n\n", new_source);
+        shader_info->source = new_source;
+    }
     es3_functions.glShaderSource(shader, 1, &shader_info->source, 0);
     free(target_string);
 }
