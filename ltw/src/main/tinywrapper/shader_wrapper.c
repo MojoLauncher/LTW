@@ -195,7 +195,7 @@ void glShaderSource(GLuint shader, GLsizei count, const GLchar *const*string, co
     if(shader_info->source != NULL) free((void*)shader_info->source);
     if(!new_source) {
         printf("LTWShdrWp: failed to optimize shader %u, skipping\n", shader);
-        shader_info->source = target_string;
+        return;
     } else {
         //printf("\n\n\nShader Result\n%s\n\n\n", new_source);
         shader_info->source = new_source;
