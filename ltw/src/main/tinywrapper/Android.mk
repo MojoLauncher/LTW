@@ -396,6 +396,7 @@ LOCAL_SRC_FILES := \
     basevertex.c \
     blending.c \
     query.c \
+    depth.c \
     shader_wrapper.c \
     string_utils.c \
     framebuffer.c \

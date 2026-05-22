@@ -7,6 +7,7 @@
 #include "unordered_map/int_hash.h"
 #include "string_utils.h"
 #include "env.h"
+#include "depth.h"
 #include <string.h>
 
 thread_local context_t *current_context;
@@ -212,6 +213,11 @@ static void init_incontext(context_t* tw_context) {
     basevertex_init(tw_context);
     buffer_copier_init(tw_context);
     es3_functions.glGenBuffers(1, &tw_context->multidraw_element_buffer);
+    if(env_istrue_d("LTW_EMULATE_DEPTHCLEAR", false)){
+        printf("LTW: Enabling ANGLE depth clear workaround\n");
+        tw_context->clear_depth_emu = true;
+        depthfix_init_program();
+    }
 }
 
 EGLContext eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_context, const EGLint *attrib_list) {
