@@ -139,7 +139,7 @@ const char* str_primtype(GLenum type, bool out) {
         case GL_TRIANGLE_STRIP_ADJACENCY:
         case GL_TRIANGLES_ADJACENCY: return "triangles_adjacency";
         default:
-            printf("Unhandled geom shader input primtype: %x\n", type);
+            printf("ir_print_glsl_visitor: Unhandled geom shader input primtype: %x\n", type);
             return "unknown";
     }
     else switch(type) {
@@ -147,15 +147,14 @@ const char* str_primtype(GLenum type, bool out) {
         case GL_LINE_STRIP: return "line_strip";
         case GL_TRIANGLE_STRIP: return "triangle_strip";
         default:
-            printf("Unhandled geom shader output primtype: %x\n", type);
+            printf("ir_print_glsl_visitor: Unhandled geom shader output primtype: %x\n", type);
             return "unknown";
     }
 }
 
 bool should_print_layout(const ast_type_qualifier* qual) {
     return qual->flags.q.prim_type ||
-            qual->flags.q.max_vertices ||
-            qual->flags.q.local_size;
+            qual->flags.q.max_vertices;
 }
 
 void print_layout(sbuffer& str, struct _mesa_glsl_parse_state* state, ast_type_qualifier* qual, bool out) {
@@ -167,7 +166,6 @@ void print_layout(sbuffer& str, struct _mesa_glsl_parse_state* state, ast_type_q
         block                       \
     }
 #define LAYOUT_QUALIFIER(name, block) I_LAYOUT_QUALIFIER(qual->flags.q.name, block)
-#define LAYOUT_QUALIFIER_MASK(name, bit, block) I_LAYOUT_QUALIFIER(qual->flags.q.name & (bit), block)
     str.append("layout(");
     LAYOUT_QUALIFIER(prim_type,{
         str.append("%s", str_primtype(qual->prim_type, out));
@@ -178,15 +176,12 @@ void print_layout(sbuffer& str, struct _mesa_glsl_parse_state* state, ast_type_q
                                    &qual_max_vertices, true);
         str.append("max_vertices=%u", qual_max_vertices);
     })
-    LAYOUT_QUALIFIER_MASK(local_size, 1 << 0, {
-        str.append("local_size_x=", state->cs_input_local_size[0]);
-    })
-    LAYOUT_QUALIFIER_MASK(local_size, 1 << 1, {
-        str.append("local_size_y=", state->cs_input_local_size[1]);
-    })
-    LAYOUT_QUALIFIER_MASK(local_size, 1 << 2, {
-        str.append("local_size_z=", state->cs_input_local_size[2]);
-    })
+    if(!out && state->cs_input_local_size_specified) {
+        auto& local_size = state->cs_input_local_size;
+        I_LAYOUT_QUALIFIER(local_size[0] != 0, str.append("local_size_x=%u",local_size[0]);)
+        I_LAYOUT_QUALIFIER(local_size[1] != 0, str.append("local_size_y=%u",local_size[1]);)
+        I_LAYOUT_QUALIFIER(local_size[2] != 0, str.append("local_size_z=%u",local_size[2]);)
+    }
     str.append(") ");
 }
 
@@ -345,7 +340,7 @@ char * IR_TO_GLSL::Convert(
 			}
 			res.append("};\n");
 		}
-        if(should_print_layout(state->in_qualifier)) {
+        if(should_print_layout(state->in_qualifier) || state->cs_input_local_size_specified) {
             print_layout(res, state, state->in_qualifier, false);
             res.append("in;\n");
         }
@@ -550,6 +545,92 @@ IR_TO_GLSL::visit(ir_rvalue*)
 	generated_source.append("error");
 }
 
+static const char* image_load_store_format(pipe_format format) {
+    switch (format) {
+        case PIPE_FORMAT_R32G32B32A32_FLOAT: return "rgba32f";
+        case PIPE_FORMAT_R16G16B16A16_FLOAT: return "rgba16f";
+        case PIPE_FORMAT_R32G32_FLOAT: return "rg32f";
+        case PIPE_FORMAT_R16G16_FLOAT: return "rg16f";
+        case PIPE_FORMAT_R11G11B10_FLOAT: return "r11f_g11f_b10f";
+        case PIPE_FORMAT_R32_FLOAT: return "r32f";
+        case PIPE_FORMAT_R16_FLOAT: return "r16f";
+        case PIPE_FORMAT_R16G16B16A16_SSCALED: return "rgba16";
+        case PIPE_FORMAT_R10G10B10A2_SSCALED: return "rgb10_a2";
+        case PIPE_FORMAT_R8G8B8A8_SSCALED: return "rgba8";
+        case PIPE_FORMAT_R16G16_SSCALED: return "rg16";
+        case PIPE_FORMAT_R8G8_SSCALED: return "rg8";
+        case PIPE_FORMAT_R16_SSCALED: return "r16";
+        case PIPE_FORMAT_R8_SSCALED: return "r8";
+        case PIPE_FORMAT_R16G16B16A16_SNORM: return "rgba16_snorm";
+        case PIPE_FORMAT_R8G8B8A8_SNORM: return "rgba8_snorm";
+        case PIPE_FORMAT_R16G16_SNORM: return "rg16_snorm";
+        case PIPE_FORMAT_R8G8_SNORM: return "rg8_snorm";
+        case PIPE_FORMAT_R16_SNORM: return "r16_snorm";
+        case PIPE_FORMAT_R8_SNORM: return "r8_snorm";
+        case PIPE_FORMAT_R32G32B32A32_SINT: return "rgba32i";
+        case PIPE_FORMAT_R16G16B16A16_SINT: return "rgba16i";
+        case PIPE_FORMAT_R8G8B8A8_SINT: return "rgba8i";
+        case PIPE_FORMAT_R32G32_SINT: return "rg32i";
+        case PIPE_FORMAT_R16G16_SINT: return "rg16i";
+        case PIPE_FORMAT_R8G8_SINT: return "rg8i";
+        case PIPE_FORMAT_R32_SINT: return "r32i";
+        case PIPE_FORMAT_R16_SINT: return "r16i";
+        case PIPE_FORMAT_R8_SINT: return "r8i";
+        case PIPE_FORMAT_R32G32B32A32_UINT: return "rgba32ui";
+        case PIPE_FORMAT_R16G16B16A16_UINT: return "rgba16ui";
+        case PIPE_FORMAT_R10G10B10A2_UINT: return "rgb10_a2ui";
+        case PIPE_FORMAT_R8G8B8A8_UINT: return "rgba8ui";
+        case PIPE_FORMAT_R32G32_UINT: return "rg32ui";
+        case PIPE_FORMAT_R16G16_UINT: return "rg16ui";
+        case PIPE_FORMAT_R8G8_UINT: return "rg8ui";
+        case PIPE_FORMAT_R32_UINT: return "r32ui";
+        case PIPE_FORMAT_R16_UINT: return "r16ui";
+        case PIPE_FORMAT_R8_UINT: return "r8ui";
+        default:
+            printf("ir_print_glsl_visitor: Unknown image load store format: %u\n", format);
+            return "unknown";
+    }
+}
+void IR_TO_GLSL::print_generic_layout_block(ir_variable* ir) {
+    auto &data = ir->data;
+    bool should_print = data.binding || data.explicit_location || data.explicit_component || data.image_format;
+    if(!should_print) return;
+    bool packed_stream = data.stream & (1u << 31);
+    if(packed_stream) {
+        generated_source.append("// GS packed stream: %u,%u,%u,%u",
+                                ir->data.stream & 3, (ir->data.stream >> 2) & 3,
+                                (ir->data.stream >> 4) & 3, (ir->data.stream >> 6) & 3);
+    }
+
+    bool first = true;
+#define SEPARATE { if(!first) { generated_source.append(","); } else { first = false; } }
+    generated_source.append("layout(");
+    if(data.binding) {
+        SEPARATE generated_source.append("binding=%i", data.binding);
+    }
+    if(data.explicit_location) {
+        const int binding_base = (this->state->stage == MESA_SHADER_VERTEX ? (int)VERT_ATTRIB_GENERIC0 : (int)FRAG_RESULT_DATA0);
+        const int location = data.location - binding_base;
+        SEPARATE generated_source.append("location=%i", location);
+    }
+    if(data.explicit_component) {
+        SEPARATE generated_source.append("component=%u", data.location_frac);
+    }
+    if(data.stream) {
+        SEPARATE if(packed_stream) {
+            generated_source.append("LTW_PACKED_STREAM_REPORT_TO_DEVS");
+        }else {
+            generated_source.append("stream=%u", data.stream);
+        }
+
+    }
+    if(data.image_format) {
+        SEPARATE generated_source.append(image_load_store_format(data.image_format));
+    }
+    generated_source.append(") ");
+#undef SEPARATE
+}
+
 void
 IR_TO_GLSL::visit(ir_variable* ir)
 {
@@ -562,25 +643,14 @@ IR_TO_GLSL::visit(ir_variable* ir)
 		visit_uniform_block( ir );
 		return;
 	}
-	char binding[32] = { 0 };
-	if (ir->data.binding)
-		snprintf(binding, sizeof(binding), "binding=%i ", ir->data.binding);
 
-	char loc[100] = { 0 };
-	if (this->state->language_version >= 300 && ir->data.explicit_location)
-	{
-		const int binding_base = (this->state->stage == MESA_SHADER_VERTEX ? (int)VERT_ATTRIB_GENERIC0 : (int)FRAG_RESULT_DATA0);
-		const int location = ir->data.location - binding_base;
-		snprintf(loc, sizeof(loc), "layout(location=%d) ", location);
-	} else if(!ir->data.explicit_location && ir->data.mode == ir_var_shader_out && this->state->stage == MESA_SHADER_FRAGMENT) {
+    if(!ir->data.explicit_location && ir->data.mode == ir_var_shader_out && this->state->stage == MESA_SHADER_FRAGMENT) {
         generated_source.append("/* LTW INSERT LOCATION ");
         print_var_name(ir);
         generated_source.append(" LTW */");
+    } else {
+        print_generic_layout_block(ir);
     }
-	else if (ir->data.location != -1)
-	{
-		snprintf(loc, sizeof(loc), "location=%i ", ir->data.location);
-	}
 
 	int decormode = this->mode;
 	// GLSL 1.30 and up use "in" and "out" for everything
@@ -626,29 +696,6 @@ IR_TO_GLSL::visit(ir_variable* ir)
 		}
 	}
 
-	char component[32] = { 0 };
-	if (ir->data.explicit_component || ir->data.location_frac != 0)
-		snprintf(component, sizeof(component), "component=%i ",
-			ir->data.location_frac);
-
-	char stream[32] = { 0 };
-	if (ir->data.stream & (1u << 31)) {
-		if (ir->data.stream & ~(1u << 31)) {
-			snprintf(stream, sizeof(stream), "stream(%u,%u,%u,%u) ",
-				ir->data.stream & 3, (ir->data.stream >> 2) & 3,
-				(ir->data.stream >> 4) & 3, (ir->data.stream >> 6) & 3);
-		}
-	}
-	else if (ir->data.stream) {
-		snprintf(stream, sizeof(stream), "stream%u ", ir->data.stream);
-	}
-
-	char image_format[32] = { 0 };
-	if (ir->data.image_format) {
-		snprintf(image_format, sizeof(image_format), "format=%x ",
-			ir->data.image_format);
-	}
-
 	const char* const cent = (ir->data.centroid) ? "centroid " : "";
 	const char* const samp = (ir->data.sample) ? "sample " : "";
 	const char* const patc = (ir->data.patch) ? "patch " : "";
@@ -664,9 +711,9 @@ IR_TO_GLSL::visit(ir_variable* ir)
 	const char* const memory_restrict = (ir->data.memory_restrict) ? "restrict " : "";
 	const char* const mode[3][ir_var_mode_count] =
 	{
-		{ "", "uniform ", "shader_storage", "shader_shared", "in ",        "out ",     "in ", "out ", "inout ", "const_in ", "sys ", "" },
-		{ "", "uniform ", "shader_storage", "shader_shared", "attribute ", "varying ", "in ", "out ", "inout ", "const_in ", "sys ", "" },
-		{ "", "uniform ", "shader_storage", "shader_shared", "varying ",   "out ",     "in ", "out ", "inout ", "const_in ", "sys ", "" }
+		{ "", "uniform ", "shader_storage", "shared ", "in ",        "out ",     "in ", "out ", "inout ", "const_in ", "sys ", "" },
+		{ "", "uniform ", "shader_storage", "shared ", "attribute ", "varying ", "in ", "out ", "inout ", "const_in ", "sys ", "" },
+		{ "", "uniform ", "shader_storage", "shared ", "varying ",   "out ",     "in ", "out ", "inout ", "const_in ", "sys ", "" }
 	};
 	const char* const interp[] = { "", "smooth ", "flat ", "noperspective ", "EXPLICIT ", "COLOR " };
 	STATIC_ASSERT(ARRAY_SIZE(interp) == INTERP_MODE_COUNT);
@@ -679,12 +726,10 @@ IR_TO_GLSL::visit(ir_variable* ir)
 		return;
 	}
 
-	generated_source.append("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
-		binding, loc, component, cent, bindless, bound,
-		image_format, memory_read_only, memory_write_only,
+	generated_source.append("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",cent, bindless, bound,memory_read_only, memory_write_only,
 		memory_coherent, memory_volatile, memory_restrict,
 		samp, patc, inv, explicit_inv, prec, interp[ir->data.interpolation], mode[decormode][ir->data.mode],
-		precision[ir->data.precision], stream);
+		precision[ir->data.precision]);
 
 	print_type(generated_source, ir->type, false);
 	generated_source.append(" ");
@@ -1242,9 +1287,17 @@ IR_TO_GLSL::visit(ir_expression* ir)
 		if (ir->operands[1])
 			ir->operands[1]->accept(this);
 		generated_source.append(")");
-	}
-	else
-	{
+	} else if(ir->operation == ir_triop_fma && state->es_shader && state->language_version < 320) {
+        // unfuse the FMA. Technically some es310 devices support FMA with GL_OES_gpu_shader5 but im
+        // too lazy to implement checks for that
+        generated_source.append("((");
+        ir->operands[0]->accept(this);
+        generated_source.append(") * (");
+        ir->operands[1]->accept(this);
+        generated_source.append(") + (");
+        ir->operands[2]->accept(this);
+        generated_source.append("))");
+    } else {
 		// ternary op
 		generated_source.append("%s (", operator_glsl_strs[ir->operation]);
 		if (ir->operands[0])
