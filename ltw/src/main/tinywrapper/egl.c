@@ -122,6 +122,7 @@ void build_extension_string(context_t* context) {
     // Required by Iris. Indexed variants are available since ES3.2 or with OES/EXT_draw_buffers_indexed extensions
     if(context->blending.available)
         add_extra_extension(context, &length, "GL_ARB_draw_buffers_blend");
+    add_extra_extension(context, &length, "GL_ARB_clear_texture");
     // Used by Minecraft for the GPU usage counter (see Blaze3D TimerQuery)
     add_extra_extension(context, &length, "GL_ARB_timer_query");
     // More extensions are possible, but will need way more wraps and tracking.
