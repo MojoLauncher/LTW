@@ -4,6 +4,7 @@
  * For use under LGPL-3.0
  */
 #include <GLES3/gl31.h>
+#include <stdio.h>
 #include "proc.h"
 #include "egl.h"
 #include "main.h"

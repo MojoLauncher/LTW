@@ -7,11 +7,6 @@ android {
     compileSdk 34
     defaultConfig {
         minSdk 21
-        externalNativeBuild {
-            ndkBuild {
-                arguments '-j24'
-            }
-        }
     }
 
     buildTypes {
@@ -27,8 +22,8 @@ android {
     }
     ndkVersion = "28.2.13676358"
     externalNativeBuild {
-        ndkBuild {
-            path file('src/main/tinywrapper/Android.mk')
+        cmake {
+            path file('src/main/tinywrapper/CMakeLists.txt')
         }
     }
 }

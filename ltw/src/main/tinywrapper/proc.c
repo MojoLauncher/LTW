@@ -7,7 +7,7 @@
 #include <GLES3/gl31.h>
 #include <dlfcn.h>
 #include <stdlib.h>
-#include <android/log.h>
+#include <stdio.h>
 #include <string.h>
 #include "proc.h"
 #include "egl.h"
@@ -20,12 +20,12 @@ INTERNAL eglMustCastToProperFunctionPointerType (*host_eglGetProcAddress)(const 
 INTERNAL es3_functions_t es3_functions;
 
 static void error_sysegl() {
-    __android_log_print(ANDROID_LOG_ERROR, "LTWInit", "Failed to load system EGL: %s", dlerror());
+    printf("LTWInit: Failed to load system EGL: %s\n", dlerror());
     abort();
 }
 
 static void error_init(const char* functionName) {
-    __android_log_print(ANDROID_LOG_ERROR, "LTWInit", "Failed to load function \"%s\"", functionName);
+    printf("LTWInit: Failed to load function \"%s\"\n", functionName);
     abort();
 }
 

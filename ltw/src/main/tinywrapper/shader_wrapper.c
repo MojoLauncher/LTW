@@ -9,6 +9,7 @@
 #include "glsl_optimizer/src/code/c_wrapper.h"
 #include <GLES3/gl3.h>
 #include <string.h>
+#include <stdio.h>
 #include "string_utils.h"
 #include "egl.h"
 #include "proc.h"

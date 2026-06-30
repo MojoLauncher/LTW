@@ -32,7 +32,6 @@
 #include "os_file.h"
 #include "ralloc.h"
 #include "simple_mtx.h"
-#include "android/log.h"
 
 #include <stdarg.h>
 
@@ -57,6 +56,7 @@
 #  define LOG_TAG "MESA"
 #  include <unistd.h>
 //#  include <log/log.h>
+#include "android/log.h"
 #elif DETECT_OS_LINUX || DETECT_OS_CYGWIN || DETECT_OS_SOLARIS || DETECT_OS_HURD
 #  include <unistd.h>
 #elif DETECT_OS_OPENBSD || DETECT_OS_FREEBSD

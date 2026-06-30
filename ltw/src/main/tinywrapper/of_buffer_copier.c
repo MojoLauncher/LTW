@@ -6,6 +6,7 @@
 #include "proc.h"
 #include "egl.h"
 #include <stdbool.h>
+#include <stdio.h>
 #include "swizzle.h"
 void buffer_copier_init(context_t* context) {
     framebuffer_copier_t* copier = &context->framebuffer_copier;
