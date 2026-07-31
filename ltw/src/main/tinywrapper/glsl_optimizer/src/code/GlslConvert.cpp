@@ -184,6 +184,9 @@ char * GlslConvert::Optimize(
 			if (!state->translation_unit.is_empty())
 				_mesa_ast_to_hir(ir, state);
 
+            if(!state->error)
+                _mesa_set_shader_inout_layout(shader, state);
+
 			if (!state->error)
 			{
 				// Link built-in functions

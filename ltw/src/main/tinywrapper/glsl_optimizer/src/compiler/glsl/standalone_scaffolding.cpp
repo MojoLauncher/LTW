@@ -187,6 +187,10 @@ void initialize_context_to_defaults(struct gl_context *ctx, gl_api api)
    ctx->Extensions.ARB_viewport_array = true;
    ctx->Extensions.ARB_cull_distance = true;
    ctx->Extensions.ARB_bindless_texture = true;
+   ctx->Extensions.ARB_shader_image_load_store = true;
+   ctx->Extensions.EXT_shader_image_load_store = true;
+   ctx->Extensions.ARB_shader_storage_buffer_object = true;
+   ctx->Extensions.ARB_shader_atomic_counters = true;
 
    ctx->Extensions.OES_EGL_image_external = true;
    ctx->Extensions.OES_standard_derivatives = true;

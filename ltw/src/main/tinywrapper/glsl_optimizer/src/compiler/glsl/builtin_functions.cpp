@@ -5537,7 +5537,10 @@ builtin_builder::add_image_function(const char *name,
 void
 builtin_builder::add_image_functions(bool glsl)
 {
-   const unsigned flags = (glsl ? IMAGE_FUNCTION_EMIT_STUB : 0);
+   //const unsigned flags = (glsl ? IMAGE_FUNCTION_EMIT_STUB : 0);
+   // Don't emit stubs. These get inlined on the optimization stage and then cause the printer to
+   // print the intrinsic instead of the actual function.
+   const unsigned flags = 0;
 
    add_image_function(glsl ? "imageLoad" : "__intrinsic_image_load",
                        "__intrinsic_image_load",

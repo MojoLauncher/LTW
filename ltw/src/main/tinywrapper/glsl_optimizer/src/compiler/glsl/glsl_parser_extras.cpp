@@ -1771,8 +1771,7 @@ void ast_subroutine_list::print(void) const
    }
 }
 
-static void
-set_shader_inout_layout(struct gl_shader *shader,
+void _mesa_set_shader_inout_layout(struct gl_shader *shader,
 		     struct _mesa_glsl_parse_state *state)
 {
    /* Should have been prevented by the parser. */
@@ -2290,7 +2289,7 @@ _mesa_glsl_compile_shader(struct gl_context *ctx, struct gl_shader *shader,
       ralloc_free(shader->InfoLog);
 
    if (!state->error)
-      set_shader_inout_layout(shader, state);
+      _mesa_set_shader_inout_layout(shader, state);
 
    shader->symbols = new(shader->ir) glsl_symbol_table;
    shader->CompileStatus = state->error ? COMPILE_FAILURE : COMPILE_SUCCESS;
