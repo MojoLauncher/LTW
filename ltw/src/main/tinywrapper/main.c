@@ -263,6 +263,7 @@ void glRenderbufferStorage(	GLenum target,
 
 static bool never_flush_buffers;
 static bool coherent_dynamic_storage;
+static bool ignore_linking_errors;
 
 void glBufferStorage(GLenum target,
                      GLsizeiptr size,
@@ -447,6 +448,16 @@ void glGetIntegerv(GLenum pname, GLint* data) {
     }
 }
 
+void glGetProgramiv(GLuint program, GLenum pname, GLint *params){
+    if(!current_context) return;
+    es3_functions.glGetProgramiv(program, pname, params);
+    // HACK: Some drivers fail linking programs due to fragment shader build failures. Let's ignore this so the game at least boots
+    if(ignore_linking_errors && pname == GL_LINK_STATUS && *params == GL_FALSE){
+        printf("LTW: Invalid program %u, will pass anyway\n", program);
+        *params = GL_TRUE;
+    }
+}
+
 void glDepthRange(GLdouble nearVal,
                   GLdouble farVal) {
     if(!current_context) return;
@@ -499,10 +510,12 @@ __attribute((constructor)) void init_noerror() {
     debug = env_istrue("LTW_DEBUG");
     never_flush_buffers = env_istrue_d("LTW_NEVER_FLUSH_BUFFERS", true);
     coherent_dynamic_storage = env_istrue_d("LTW_COHERENT_DYNAMIC_STORAGE", true);
+    ignore_linking_errors = env_istrue_d("LTW_IGNORE_LINK_ERRORS", false);
     if(!noerror) printf("LTW will NOT ignore GL errors. This may break mods, consider yourself warned.\n");
     if(coherent_dynamic_storage) printf("LTW will force dynamic storage buffers to be coherent.\n");
     if(debug) printf("LTW will allow GL_DEBUG_OUTPUT to be enabled. Expect massive logs.\n");
     if(never_flush_buffers) printf("LTW will prevent all explicit buffer flushes.\n");
+    if(ignore_linking_errors) printf("LTW will ignore program linking errors. This may cause graphical artifacts\n");
 }
 
 GLenum glGetError() {
