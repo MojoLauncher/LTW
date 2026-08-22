@@ -365,6 +365,32 @@ char * IR_TO_GLSL::Convert(
     global.enable_nan_check = shader_nan_check;
 	int uses_texlod_impl = 0;
 	int uses_texlodproj_impl = 0;
+
+    foreach_in_list(ir_instruction, ir, instructions)
+    {
+        if(ir->ir_type == ir_type_function)
+        {
+            IR_TO_GLSL v(res, &global, state);
+            v.mode = 0;
+            ir_function* func = (ir_function*)ir;
+            bool user_sig = false;
+            foreach_in_list(ir_function_signature, sig, &func->signatures)
+            {
+                if (!sig->is_builtin()) {
+                    user_sig = true;
+                    break;
+                }
+            }
+            if(!user_sig || strcmp(func->name, "main") == 0) continue;
+            foreach_in_list(ir_function_signature, sig, &func->signatures)
+            {
+                if(sig->is_builtin() || !sig->is_defined) continue;
+                v.print_function_header(sig);
+                res.append(");\n");
+            }
+        }
+    }
+
 	loop_state* ls = analyze_loop_variables(instructions);
 	if (ls)
 	{
@@ -709,23 +735,7 @@ IR_TO_GLSL::visit(ir_function_signature* ir)
 {
 	_mesa_symbol_table_push_scope(symbols);
 
-	print_type(generated_source, ir->return_type, true);
-	generated_source.append(" %s(", ir->function_name());
-
-	if (!ir->parameters.is_empty())
-	{
-		previous_skipped = false;
-		bool first = true;
-		foreach_in_list(ir_variable, inst, &ir->parameters)
-		{
-			if (!first)
-				generated_source.append(", ");
-			indent();
-			inst->accept(this);
-			first = false;
-		}
-		indent();
-	}
+    print_function_header(ir);
 
 	if (ir->body.is_empty() && strcmp(ir->function()->name, "main") != 0)
 	{
@@ -2350,4 +2360,24 @@ void IR_TO_GLSL::visit_uniform_block(ir_variable *ir) {
 	{
 		generated_source.append( " %s", ir->name );
 	}
+}
+
+void IR_TO_GLSL::print_function_header(ir_function_signature *sig) {
+    print_type(generated_source, sig->return_type, true);
+    generated_source.append(" %s(", sig->function_name());
+
+    if (!sig->parameters.is_empty())
+    {
+        previous_skipped = false;
+        bool first = true;
+        foreach_in_list(ir_variable, inst, &sig->parameters)
+        {
+            if (!first)
+                generated_source.append(", ");
+            indent();
+            inst->accept(this);
+            first = false;
+        }
+        indent();
+    }
 }
