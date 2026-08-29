@@ -153,12 +153,13 @@ static void find_esversion(context_t* context) {
     if(strstr(extensions, "GL_EXT_buffer_storage")) context->buffer_storage = true;
     if(strstr(extensions, "GL_EXT_texture_buffer")) context->buffer_texture_ext = true;
     if(strstr(extensions, "GL_EXT_multi_draw_indirect")) context->multidraw_indirect = true;
-
     // EXT_disjoint_timer_query provides accurate int64 timer queries
     // on Core Profile it's ARB_timer_query instead
     // This enables real time queries via mentioned extension, otherwise faked ones are used (see query.c)
-    if(strstr(extensions, "GL_EXT_disjoint_timer_query") || env_istrue_d("LTW_ENABLE_TIMER_QUERY", false)) context->timer_query = true;
-
+    if(strstr(extensions, "GL_EXT_disjoint_timer_query") && !env_istrue_d("LTW_FAKE_TIMER_QUERIES", false)) {
+        printf("LTW: Will use EXT_disjoint_timer_query for accurate timer queries\n");
+        context->timer_query = true;
+    }
     bool basevertex_oes = strstr(extensions, "GL_OES_draw_elements_base_vertex");
     bool basevertex_ext = strstr(extensions, "GL_EXT_draw_elements_base_vertex");
     if(context->es32) context->drawelementsbasevertex = es3_functions.glDrawElementsBaseVertex;
