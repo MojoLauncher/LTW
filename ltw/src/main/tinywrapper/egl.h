@@ -69,7 +69,7 @@ typedef struct {
 typedef struct {
     EGLContext phys_context;
     bool context_rdy;
-    bool es31, es32, buffer_storage, buffer_texture_ext, multidraw_indirect, timer_query;
+    bool es31, es32, buffer_storage, buffer_texture_ext, multidraw_indirect, timer_query, clear_depth_emu;
     GLint shader_version;
     basevertex_renderer_t basevertex;
     PFNGLDRAWELEMENTSBASEVERTEXPROC drawelementsbasevertex;

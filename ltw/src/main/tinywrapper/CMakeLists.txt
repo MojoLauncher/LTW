@@ -3,7 +3,7 @@ project(LTW VERSION 1.0.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_library(ltw SHARED basevertex.c blending.c egl.c framebuffer.c env.c glformats.c license_notice.c main.c multidraw.c of_buffer_copier.c proc.c query.c shader_wrapper.c string_utils.c stubs.c swizzle.c vertexattrib.c)
+add_library(ltw SHARED basevertex.c blending.c egl.c framebuffer.c env.c glformats.c license_notice.c main.c multidraw.c of_buffer_copier.c proc.c query.c shader_wrapper.c string_utils.c stubs.c swizzle.c vertexattrib.c depth.c)
 include_directories("${CMAKE_SOURCE_DIR}")
 add_subdirectory(unordered_map)
 add_subdirectory(vgpu_shaderconv)
