@@ -461,6 +461,10 @@ INTERNAL void convert_texture2d(GLenum type, GLenum format, GLuint width, GLuint
             swizzle[2] = 1;
             swizzle[3] = 0;
             break;
+        case GL_RGBA:
+            swizzle[1] = 3;
+            swizzle[3] = 1;
+            break;
     }
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define UNSIGNED_DIRECT_FORMAT GL_UNSIGNED_INT_8_8_8_8_REV
@@ -480,6 +484,8 @@ INTERNAL void convert_texture2d(GLenum type, GLenum format, GLuint width, GLuint
 #undef UNSIGNED_REVERSE_FORMAT
 
     unpack_state_t *state = &current_context->unpack;
+
+    printf("SWIZ %d %d %d %d\n", swizzle[0], swizzle[1], swizzle[2], swizzle[3]);
 
     *outdata = malloc(width * height * color_channels_in * num_channel_bits(outtype));
     GLuint unpack_row_length = current_context->unpack.row_length;

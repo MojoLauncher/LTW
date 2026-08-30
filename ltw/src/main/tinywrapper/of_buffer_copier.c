@@ -8,8 +8,10 @@
 #include <stdbool.h>
 #include "unpack.h"
 #include "glformats.h"
+#include "GL/gl.h"
 
 #include <android/log.h>
+#include <string.h>
 
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, "LTW", __VA_ARGS__)
 
@@ -140,6 +142,35 @@ void glTexSubImage2D(GLenum target,
     GLuint tgformat, tgtype;
     pick_store_format_pure(internalformat, &tgtype, &tgformat);
     GLvoid* newdata = NULL;
+
+    GLint unpackPBOid;
+    void* pbodata;
+    void* pboptr;
+    glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &unpackPBOid);
+    if (unpackPBOid != 0) {
+        printf("LTW WARN: unpack PBO bound with ID %d\n", unpackPBOid);
+        GLint64 bufferSize = 0;
+        es3_functions.glGetBufferParameteri64v(GL_PIXEL_UNPACK_BUFFER, GL_BUFFER_SIZE, &bufferSize);
+        pboptr = glMapBufferRange(GL_PIXEL_UNPACK_BUFFER,0,bufferSize,GL_MAP_READ_BIT);
+        pbodata = malloc(bufferSize);
+        memcpy(pbodata, pboptr, bufferSize);
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+
+        printf("TYPE: %d, FORMAT: %d\n", type, format);
+
+        convert_texture2d(type, GL_RGBA, width, height, pbodata, tgtype, tgformat, &newdata);
+        if(newdata == NULL) {
+            printf("LTW WARN: did not convert %x %x -> %x %x, upload skipped\n", type, format, tgtype, tgformat);
+            return;
+        }
+        apply_default_state_to_hw();
+        printf("TYPE2: %d, FORMAT2: %d\n", tgtype, tgformat);
+        es3_functions.glTexSubImage2D(target, level, xoffset, yoffset, width, height, tgformat, tgtype, newdata);
+        free(newdata);
+        free(pbodata);
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, unpackPBOid);
+        return;
+    }
     convert_texture2d(type, format, width, height, data, tgtype, tgformat, &newdata);
     if(newdata == NULL) {
         printf("LTW WARN: did not convert %x %x -> %x %x, upload skipped\n", type, format, tgtype, tgformat);
