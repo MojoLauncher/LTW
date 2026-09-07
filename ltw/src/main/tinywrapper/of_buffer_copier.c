@@ -9,6 +9,7 @@
 #include "unpack.h"
 #include "glformats.h"
 #include "GL/gl.h"
+#include "main.h"
 
 #include <android/log.h>
 
@@ -142,7 +143,7 @@ void glTexSubImage2D(GLenum target,
     pick_store_format_pure(internalformat, &tgtype, &tgformat);
     GLvoid* newdata = NULL;
 
-    GLint unpackPBOid;
+    GLuint unpackPBOid = current_context->bound_buffers[get_buffer_index(GL_PIXEL_UNPACK_BUFFER)];
     void* pbodata;
     glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &unpackPBOid);
     if (unpackPBOid != 0) {
@@ -150,7 +151,7 @@ void glTexSubImage2D(GLenum target,
         es3_functions.glGetBufferParameteri64v(GL_PIXEL_UNPACK_BUFFER, GL_BUFFER_SIZE, &bufferSize);
         pbodata = glMapBufferRange(GL_PIXEL_UNPACK_BUFFER,0,bufferSize,GL_MAP_READ_BIT);
         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-        convert_texture2d(type, GL_RGBA, width, height, pbodata, tgtype, tgformat, &newdata);
+        convert_texture2d(type, format, width, height, pbodata, tgtype, tgformat, &newdata);
         if(newdata == NULL) {
             printf("LTW WARN: did not convert %x %x -> %x %x, upload skipped\n", type, format, tgtype, tgformat);
             return;

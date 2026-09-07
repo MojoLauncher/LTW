@@ -423,6 +423,7 @@ static inline void reverse_swizzle(unsigned char swizzle[4]) {
     swizzle[3] = swizzle_temp[0];
 }
 
+/* Note: this method always assumes RGBA output order */
 INTERNAL void convert_texture2d(GLenum type, GLenum format, GLuint width, GLuint height, GLvoid const* data, GLenum outtype, GLenum outformat, GLvoid** outdata) {
     if((!is_type_basic(type) && !is_rgba8_special(format, type)) || !is_type_basic(outtype)) {
         LOGI("conversion between non-basic types %x and %x", type, outtype);
@@ -431,10 +432,30 @@ INTERNAL void convert_texture2d(GLenum type, GLenum format, GLuint width, GLuint
     unsigned int color_channels_in = num_color_channels(format);
     unsigned int color_channels_out = num_color_channels(outformat);
 
-    unsigned char swizzle[4] = {0, 1, 2, 3};
+    unsigned char swizzle_default[4] = {0, 1, 2, 3};
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define UNSIGNED_DIRECT_FORMAT GL_UNSIGNED_INT_8_8_8_8_REV
+#define UNSIGNED_REVERSE_FORMAT  GL_UNSIGNED_INT_8_8_8_8
+#else
+#define UNSIGNED_DIRECT_FORMAT GL_UNSIGNED_INT_8_8_8_8
+#define UNSIGNED_REVERSE_FORMAT  GL_UNSIGNED_INT_8_8_8_8_REV
+#endif
+    switch(type) {
+        case UNSIGNED_REVERSE_FORMAT:
+            reverse_swizzle(swizzle_default);
+        case UNSIGNED_DIRECT_FORMAT:
+            type = GL_UNSIGNED_BYTE;
+            break;
+    }
+#undef UNSIGNED_DIRECT_FORMAT
+#undef UNSIGNED_REVERSE_FORMAT
+
+    unsigned char swizzle[4] = {
+            swizzle_default[0], swizzle_default[1], swizzle_default[2], swizzle_default[3]
+    };
+
     bool normalize = true;
-    bool swizzle_bgra = false;
-    bool swizzle_abgr = false;
     switch (format) {
         case GL_RED_INTEGER:
         case GL_RG_INTEGER:
@@ -450,42 +471,20 @@ INTERNAL void convert_texture2d(GLenum type, GLenum format, GLuint width, GLuint
         case GL_BGR_INTEGER:
         case GL_BGRA_INTEGER:
         case GL_BGRA:
-            swizzle[0] = 2;
-            swizzle[1] = 1;
-            swizzle[2] = 0;
-            swizzle[3] = 3;
+            swizzle[0] = swizzle_default[2];
+            swizzle[1] = swizzle_default[1];
+            swizzle[2] = swizzle_default[0];
+            swizzle[3] = swizzle_default[3];
             break;
         case GL_ABGR_EXT:
-            swizzle[0] = 3;
-            swizzle[1] = 2;
-            swizzle[2] = 1;
-            swizzle[3] = 0;
-            break;
-        case GL_RGBA:
-            swizzle[1] = 3;
-            swizzle[3] = 1;
+            swizzle[0] = swizzle_default[3];
+            swizzle[1] = swizzle_default[2];
+            swizzle[2] = swizzle_default[1];
+            swizzle[3] = swizzle_default[0];
             break;
     }
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define UNSIGNED_DIRECT_FORMAT GL_UNSIGNED_INT_8_8_8_8_REV
-#define UNSIGNED_REVERSE_FORMAT  GL_UNSIGNED_INT_8_8_8_8
-#else
-#define UNSIGNED_DIRECT_FORMAT GL_UNSIGNED_INT_8_8_8_8
-#define UNSIGNED_REVERSE_FORMAT  GL_UNSIGNED_INT_8_8_8_8_REV
-#endif
-    switch(type) {
-        case UNSIGNED_REVERSE_FORMAT:
-            reverse_swizzle(swizzle);
-        case UNSIGNED_DIRECT_FORMAT:
-            type = GL_UNSIGNED_BYTE;
-            break;
-    }
-#undef UNSIGNED_DIRECT_FORMAT
-#undef UNSIGNED_REVERSE_FORMAT
 
     unpack_state_t *state = &current_context->unpack;
-
-    printf("SWIZ %d %d %d %d\n", swizzle[0], swizzle[1], swizzle[2], swizzle[3]);
 
     *outdata = malloc(width * height * color_channels_in * num_channel_bits(outtype));
     GLuint unpack_row_length = current_context->unpack.row_length;
@@ -494,12 +493,19 @@ INTERNAL void convert_texture2d(GLenum type, GLenum format, GLuint width, GLuint
     // TODO: Xaero's Minimap handling
     // TODO: literally everything else, too...
     if(type == GL_UNSIGNED_BYTE && outtype == GL_UNSIGNED_BYTE) {
-        if(color_channels_in == 4 && color_channels_out == 4)
-            convert_GLubyte_4_to_GLubyte_4(unpack_row_length, height, data, *outdata, width, swizzle);
-        else if(color_channels_in == 3 && color_channels_out == 4)
-            convert_GLubyte_3_to_GLubyte_4(unpack_row_length, height, data, *outdata, width, swizzle);
-        else goto undefined;
-    }else goto undefined;
+        if(color_channels_out == 4) {
+            switch(color_channels_in) {
+                case 3:
+                    convert_GLubyte_3_to_GLubyte_4(unpack_row_length, height, data, *outdata, width, swizzle);
+                    break;
+                case 4:
+                    convert_GLubyte_4_to_GLubyte_4(unpack_row_length, height, data, *outdata, width, swizzle);
+                    break;
+                default:
+                    goto undefined;
+            }
+        } else goto undefined;
+    } else goto undefined;
     return;
 
     undefined:
