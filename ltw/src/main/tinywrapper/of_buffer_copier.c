@@ -170,5 +170,4 @@ void glCopyTexSubImage2D(GLenum target,
             texture_blit_framebuffer(target, level, xoffset, yoffset, x, y, width, height, true);
         }
     }
-
 }
