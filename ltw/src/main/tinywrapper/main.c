@@ -303,15 +303,16 @@ const GLubyte* glGetStringi(GLenum name, GLuint index) {
     }
 }
 
+static bool string_passthrough = false;
+
 const GLubyte* glGetString(GLenum name) {
+#define CASE_STRING(string, replacement) case string: if(string_passthrough) return es3_functions.glGetString(string); else return (const GLubyte*) replacement;
     if(!current_context) return NULL;
     switch(name) {
-        case GL_VERSION:
-            return (const GLubyte*)"3.3 OpenLTW (Built on: "__DATE__"/"__TIME__")";
+        CASE_STRING(GL_VERSION, "3.3 OpenLTW (Built on: "__DATE__"/"__TIME__")")
+        CASE_STRING(GL_VENDOR, "artDev, SerpentSpirale, CADIndie")
         case GL_SHADING_LANGUAGE_VERSION:
             return (const GLubyte*)"4.60 LTW";
-        case GL_VENDOR:
-            return (const GLubyte*)"artDev, SerpentSpirale, CADIndie";
         case GL_EXTENSIONS:
             if(current_context->extensions_string != NULL) return (const GLubyte*)current_context->extensions_string;
             return (const GLubyte*)es3_functions.glGetString(GL_EXTENSIONS);
@@ -499,10 +500,12 @@ __attribute((constructor)) void init_noerror() {
     debug = env_istrue("LTW_DEBUG");
     never_flush_buffers = env_istrue_d("LTW_NEVER_FLUSH_BUFFERS", true);
     coherent_dynamic_storage = env_istrue_d("LTW_COHERENT_DYNAMIC_STORAGE", true);
+    string_passthrough = env_istrue("LTW_GL_STRING_PASSTHROUGH");
     if(!noerror) printf("LTW will NOT ignore GL errors. This may break mods, consider yourself warned.\n");
     if(coherent_dynamic_storage) printf("LTW will force dynamic storage buffers to be coherent.\n");
     if(debug) printf("LTW will allow GL_DEBUG_OUTPUT to be enabled. Expect massive logs.\n");
     if(never_flush_buffers) printf("LTW will prevent all explicit buffer flushes.\n");
+    if(string_passthrough) printf("LTW will not override GL_VERSION/GL_VENDOR strings");
 }
 
 GLenum glGetError() {
