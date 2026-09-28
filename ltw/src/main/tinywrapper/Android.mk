@@ -163,8 +163,8 @@ LOCAL_SRC_FILES := glsl_optimizer/src/code/ir_print_glsl_visitor.cpp \
    glsl_optimizer/src/mesa/main/errors.c \
    glsl_optimizer/src/mesa/main/extensions_table.c \
    glsl_optimizer/src/mesa/main/imports.c \
-   glsl_optimizer/src/mesa/program/symbol_table.c \
-   glsl_optimizer/src/mesa/program/prog_parameter.c \
+   glsl_optimizer/src/program/symbol_table.c \
+   glsl_optimizer/src/program/prog_parameter.c \
    glsl_optimizer/src/compiler/glsl/gl_nir_link_uniform_initializers.c \
    glsl_optimizer/src/compiler/glsl/gl_nir_lower_packed_varyings.c \
    glsl_optimizer/src/compiler/glsl/gl_nir_opt_dead_builtin_varyings.c \
@@ -414,5 +414,5 @@ LOCAL_STATIC_LIBRARIES := glsl_optimizer
 LOCAL_LDFLAGS := -ffunction-sections -fdata-sections -Wl,--version-script=$(LOCAL_PATH)/version.script
 # Comment for debugging
 LOCAL_LDFLAGS += -flto -Wl,--gc-sections
-LOCAL_LDLIBS := -llog
+LOCAL_LDLIBS := -llog -ldl
 include $(BUILD_SHARED_LIBRARY)
