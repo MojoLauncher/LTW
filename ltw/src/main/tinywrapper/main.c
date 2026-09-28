@@ -426,7 +426,7 @@ void glGetIntegerv(GLenum pname, GLint* data) {
         case GL_NUM_EXTENSIONS:
             es3_functions.glGetIntegerv(pname, data);
             (*data) += current_context->nextras;
-            printf("GL_NUM_EXTENSIONS: %i\n", (*data));
+            if(is_verbose()) printf("GL_NUM_EXTENSIONS: %i\n", (*data));
             return;
         case GL_MAX_COLOR_ATTACHMENTS:
             *data = MAX_FBTARGETS;
@@ -493,15 +493,23 @@ void glTexBufferRangeARB(GLenum target, GLenum internalFormat, GLuint buffer, GL
 }
 
 static bool noerror;
+static bool verbose = false;
+
+bool is_verbose() {
+    return verbose;
+}
 
 __attribute((constructor)) void init_noerror() {
     noerror = env_istrue("LIBGL_NOERROR");
     debug = env_istrue("LTW_DEBUG");
+    verbose = env_istrue("LTW_VERBOSE");
     never_flush_buffers = env_istrue_d("LTW_NEVER_FLUSH_BUFFERS", true);
     coherent_dynamic_storage = env_istrue_d("LTW_COHERENT_DYNAMIC_STORAGE", true);
+    printf("--- OpenLTW init, built on " __DATE__ "/"__TIME__ " ---\n");
     if(!noerror) printf("LTW will NOT ignore GL errors. This may break mods, consider yourself warned.\n");
     if(coherent_dynamic_storage) printf("LTW will force dynamic storage buffers to be coherent.\n");
     if(debug) printf("LTW will allow GL_DEBUG_OUTPUT to be enabled. Expect massive logs.\n");
+    if(verbose) printf("LTW will increase log verbosity");
     if(never_flush_buffers) printf("LTW will prevent all explicit buffer flushes.\n");
 }
 

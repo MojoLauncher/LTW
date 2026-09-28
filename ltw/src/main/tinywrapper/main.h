@@ -11,4 +11,6 @@ int get_buffer_index(GLenum buffer);
 int get_base_buffer_index(GLenum buffer);
 GLenum get_base_buffer_enum(int buffer_index);
 
+bool is_verbose();
+
 #endif //POJAVLAUNCHER_MAIN_H

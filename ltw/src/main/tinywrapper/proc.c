@@ -7,9 +7,11 @@
 #include <GLES3/gl31.h>
 #include <dlfcn.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include "proc.h"
+#include "main.h"
 #include "egl.h"
 #include "libraryinternal.h"
 #define GL_GLEXT_PROTOTYPES
@@ -74,7 +76,7 @@ eglMustCastToProperFunctionPointerType eglGetProcAddress(const char *procname) {
     if(strncmp(procname, "gl", 2) != 0) goto fallback;
 #define GLESOVERRIDE(name)                                        \
     if(!strcmp(procname, #name)) {                                \
-        printf("LTW: Overridden %s\n", #name);                        \
+        if(is_verbose()) printf("LTW: Overridden %s\n", #name);                        \
         return (eglMustCastToProperFunctionPointerType) name;     \
     }
 #include "es3_overrides.h"

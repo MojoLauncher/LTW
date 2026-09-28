@@ -263,7 +263,7 @@ EGLBoolean eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGL
     }
     context_t* tw_context = unordered_map_get(context_map, ctx);
     if(tw_context == NULL) {
-        printf("TinywrapperEGL: Failed to find context %p\n", ctx);
+        printf("LTW: Failed to find context %p\n", ctx);
         abort();
     }
     if(!tw_context->context_rdy) {
