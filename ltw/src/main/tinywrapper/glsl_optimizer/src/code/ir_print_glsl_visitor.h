@@ -49,6 +49,7 @@ public:
 		void* mem_ctx;
 		bool	main_function_done;
         bool enable_nan_check;
+        bool enable_wvaa;
 	};
 
 public:
@@ -73,10 +74,13 @@ public:
    void print_var_name(ir_variable* v);
    void print_generic_layout_block(ir_variable* v);
    const char *unique_name(ir_variable *var);
+   bool try_emit_wvaa_assignment(ir_dereference_array* lhs, ir_rvalue* rhs);
    void emit_assignment_part(ir_dereference* lhs, ir_rvalue* rhs, unsigned write_mask, ir_rvalue* dstIndex);
    bool can_emit_canonical_for(loop_variable_state *ls);
    bool emit_canonical_for(ir_loop* ir);
    bool try_print_array_assignment(ir_dereference* lhs, ir_rvalue* rhs);
+   void scalarize_fragout(ir_variable* var);
+   const int location(ir_variable::ir_variable_data& var);
 
    virtual void visit(ir_rvalue *);
    virtual void visit(ir_variable *);

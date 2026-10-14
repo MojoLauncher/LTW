@@ -75,13 +75,16 @@ void glBindFragDataLocation( 	GLuint program,
 void glGetShaderiv(GLuint shader, GLuint pname, GLint* params) {
     if(!current_context) return;
     shader_info_t* shader_info = unordered_map_get(current_context->shader_map, (void*)shader);
-    if(shader_info != NULL && shader_info->shader_type == GL_FRAGMENT_SHADER && pname == GL_COMPILE_STATUS) {
+    /*if(shader_info != NULL && shader_info->shader_type == GL_FRAGMENT_SHADER && pname == GL_COMPILE_STATUS) {
         // HACK: ignore compile results for frag shaders, as some drivers may not compile them without explicit fragouts
         // (which we add at link-time)
         *params = GL_TRUE;
         return;
-    }
+    }*/
     es3_functions.glGetShaderiv(shader, pname, params);
+    if(pname == GL_COMPILE_STATUS && *params == GL_FALSE) {
+        printf("Shader compile failed.\n\n\nSource:\n%s\n\n\n", shader_info->source);
+    }
 }
 
 static void insert_fragout_pos(char* source, int* size, const char* name, GLuint pos) {

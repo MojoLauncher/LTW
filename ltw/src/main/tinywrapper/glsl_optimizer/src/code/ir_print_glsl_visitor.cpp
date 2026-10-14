@@ -204,6 +204,18 @@ void print_nan_check_funcs(sbuffer& str) {
     str.append(nan_check_func, "vec4", "0.0,0.0,0.0,1.0");
 }
 
+void print_wvaa_funcs(sbuffer& str) {
+	// Wrapped vector-as-array access. The PowerVR shader compiler fails if a vector-as-array access
+	// occurs on a fragment output, so print an inout function for a workaround
+	const char* wrap_func =
+			"float _ltw_wvaa_wrapper(inout %1$s accvar, in uint idx, in float val) {\n"
+			"   return accvar[idx] = val;\n"
+			"}\n";
+	str.append(wrap_func, "vec2");
+	str.append(wrap_func, "vec3");
+	str.append(wrap_func, "vec4");
+}
+
 // DANGER, the function allocates a new string
 // DO NOT FORGET TO FREE IT
 char * IR_TO_GLSL::Convert(
@@ -211,7 +223,8 @@ char * IR_TO_GLSL::Convert(
 	struct _mesa_glsl_parse_state* state)
 {
 	sbuffer res;
-    bool shader_nan_check = false;
+
+	global_print_tracker global;
 
 	if (state)
 	{
@@ -352,12 +365,18 @@ char * IR_TO_GLSL::Convert(
         bool emit_nan_check = nan_check_env != nullptr && *nan_check_env == '1';
         if(emit_nan_check && state->stage == MESA_SHADER_FRAGMENT) {
             print_nan_check_funcs(res);
-            shader_nan_check = true;
+			global.enable_nan_check = true;
+        }else {
+            global.enable_nan_check = false;
+        }
+        if(state->stage == MESA_SHADER_FRAGMENT) {
+            print_wvaa_funcs(res);
+            global.enable_wvaa = true;
+        }else {
+            global.enable_wvaa = false;
         }
 	}
 
-	global_print_tracker global;
-    global.enable_nan_check = shader_nan_check;
 	int uses_texlod_impl = 0;
 	int uses_texlodproj_impl = 0;
 	loop_state* ls = analyze_loop_variables(instructions);
@@ -591,6 +610,12 @@ static const char* image_load_store_format(pipe_format format) {
             return "unknown";
     }
 }
+
+const int IR_TO_GLSL::location(ir_variable::ir_variable_data& data) {
+	const int binding_base = (this->state->stage == MESA_SHADER_VERTEX ? (int)VERT_ATTRIB_GENERIC0 : (int)FRAG_RESULT_DATA0);
+	return data.location - binding_base;
+}
+
 void IR_TO_GLSL::print_generic_layout_block(ir_variable* ir) {
     auto &data = ir->data;
     // Maybe pick better formats? Not sure yet
@@ -618,9 +643,7 @@ void IR_TO_GLSL::print_generic_layout_block(ir_variable* ir) {
         SEPARATE generated_source.append("binding=%i", data.binding);
     }
     if(data.explicit_location) {
-        const int binding_base = (this->state->stage == MESA_SHADER_VERTEX ? (int)VERT_ATTRIB_GENERIC0 : (int)FRAG_RESULT_DATA0);
-        const int location = data.location - binding_base;
-        SEPARATE generated_source.append("location=%i", location);
+        SEPARATE generated_source.append("location=%i", location(data));
     }
     if(data.explicit_component) {
         SEPARATE generated_source.append("component=%u", data.location_frac);
@@ -1651,6 +1674,33 @@ IR_TO_GLSL::try_print_array_assignment(ir_dereference* lhs, ir_rvalue* rhs)
 	return true;
 }
 
+/**
+ * The PowerVR shader compiler has a bug: under certain circumstances, frag_out[nonconst] = nonconst_float
+ * writes may fail. To avoid this, emit a wrapper function instead of the assignment.
+ * @return whether all the conditions for wrapper emission were met
+ */
+bool IR_TO_GLSL::try_emit_wvaa_assignment(ir_dereference_array *lhs, ir_rvalue *rhs) {
+	if(!global->enable_wvaa) return false;
+	if(lhs == nullptr) return false;
+
+	int vmode = lhs->array->variable_referenced()->data.mode;
+    const struct glsl_type* arr_type = lhs->array->type;
+	const struct glsl_type* rhs_type = rhs->type;
+
+    if(vmode != ir_var_shader_out) return false;
+    if(!arr_type->is_float() || !arr_type->is_vector()) return false;
+	if(!rhs_type->is_float() || !rhs_type->is_scalar()) return false;
+
+    generated_source.append("_ltw_wvaa_wrapper(");
+    lhs->array->accept(this);
+    generated_source.append(",uint(");
+    lhs->array_index->accept(this);
+    generated_source.append("),");
+    rhs->accept(this);
+    generated_source.append(")");
+    return true;
+}
+
 void
 IR_TO_GLSL::emit_assignment_part(ir_dereference* lhs, ir_rvalue* rhs, unsigned write_mask, ir_rvalue* dstIndex)
 {
@@ -1852,6 +1902,9 @@ IR_TO_GLSL::visit(ir_assignment* ir)
 		generated_source.append(") ");
 	}
      */
+
+    if(try_emit_wvaa_assignment(ir->lhs->as_dereference_array(), ir->rhs))
+        return;
 
 	emit_assignment_part(ir->lhs, ir->rhs, ir->write_mask, NULL);
 }
