@@ -20,7 +20,7 @@ INTERNAL eglMustCastToProperFunctionPointerType (*host_eglGetProcAddress)(const 
 INTERNAL es3_functions_t es3_functions;
 
 static void error_sysegl() {
-    printf("LTWInit: Failed to load system EGL: %s\n", dlerror());
+    printf("LTWInit: Failed to load EGL: %s\n", dlerror());
     abort();
 }
 
@@ -39,16 +39,30 @@ static void init_es3_proc() {
 }
 
 __attribute__((constructor, used)) void proc_init(){
+    // ANGLE-first strategy for Vulkan rendering
+    const char* angleEglPath = "libEGL_angle.so";
     const char* systemEglPath = "libEGL.so";
-    const char* eglPath = getenv("LIBGL_EGL") != NULL ? getenv("LIBGL_EGL") : systemEglPath;
+    const char* eglPath = NULL;
+    
+    // Priority 1: Environment override (testing only)
+    if(getenv("LIBGL_EGL") != NULL) {
+        eglPath = getenv("LIBGL_EGL");
+        printf("LTWInit: Using LIBGL_EGL override: %s\n", eglPath);
+    }
+    // Priority 2: ANGLE (LD_LIBRARY_PATH must be set by launcher)
+    else {
+        eglPath = angleEglPath;
+    }
+    
     int flags = RTLD_LAZY | RTLD_LOCAL;
     void* eglHandle = dlopen(eglPath, flags);
-    if(eglHandle == NULL){
-        printf("LTWInit: failed loading custom libEGL, using default\n");
-        eglHandle = dlopen(systemEglPath, flags);
-        if(eglHandle == NULL)
-            error_sysegl();
+    
+    if(eglHandle == NULL) {
+        printf("LTWInit: FATAL - Failed to load %s: %s\n", eglPath, dlerror());
+        printf("LTWInit: Ensure launcher called setLdLibraryPath(nativedir) before loading LTW\n");
+        error_sysegl();
     }
+    
     host_eglGetProcAddress = dlsym(eglHandle, "eglGetProcAddress");
     if(host_eglGetProcAddress == NULL) error_sysegl();
     init_egl();
