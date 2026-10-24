@@ -9,7 +9,12 @@
 
 #include <GLES3/gl32.h>
 #include <GLES2/gl2ext.h>
+#ifndef __APPLE__
 #include <threads.h>
+#else
+#define thread_local _Thread_local
+#define uint uint32_t
+#endif
 
 typedef void (*eglMustCastToProperFunctionPointerType)(void);
 
