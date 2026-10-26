@@ -61,10 +61,15 @@ typedef struct {
 } framebuffer_copier_t;
 
 typedef struct {
-    GLenum original_swizzle[4];
-    GLboolean goofy_byte_order;
-    GLboolean upload_bgra;
-} texture_swizzle_track_t;
+    bool swap_bytes;
+    bool lsb_first;
+    GLint row_length;
+    GLint image_height;
+    GLint skip_rows;
+    GLint skip_pixels;
+    GLint skip_images;
+    GLint alignment;
+} unpack_state_t;
 
 typedef struct {
     EGLContext phys_context;
@@ -79,8 +84,9 @@ typedef struct {
     unordered_map* shader_map;
     unordered_map* program_map;
     unordered_map* framebuffer_map;
-    unordered_map* texture_swztrack_map;
     unordered_map* bound_basebuffers[MAX_BOUND_BASEBUFFERS];
+    unordered_map* texdesc_map;
+    unpack_state_t unpack, hwunpack;
     int proxy_width, proxy_height, proxy_intformat, maxTextureSize;
     GLint max_drawbuffers;
     GLuint bound_buffers[MAX_BOUND_BUFFERS];

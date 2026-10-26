@@ -9,6 +9,9 @@
 
 #include <GLES3/gl3.h>
 
-extern void pick_internalformat(GLint *internalformat, GLenum* type, GLenum* format, GLvoid const** data);
+extern void convert_texture2d(GLenum type, GLenum format, GLuint width, GLuint height, GLvoid const* data, GLenum outtype, GLenum outformat, GLvoid** outdata);
+extern bool make_format_non_generic(GLint *internalformat, GLenum* type, GLenum* format);
+extern void pick_store_format(GLint *internalformat, GLenum* type, GLenum* format);
+extern void pick_store_format_pure(GLint internalformat, GLenum* type, GLenum* format);
 
 #endif //POJAVLAUNCHER_GLFORMATS_H

@@ -16,7 +16,7 @@
 #include "egl.h"
 #include "glformats.h"
 #include "main.h"
-#include "swizzle.h"
+#include "unpack.h"
 #include "libraryinternal.h"
 #include "env.h"
 
@@ -181,10 +181,38 @@ void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei widt
         current_context->proxy_width = ((width<<level)>current_context->maxTextureSize)?0:width;
         current_context->proxy_height = ((height<<level)>current_context->maxTextureSize)?0:height;
         current_context->proxy_intformat = internalformat;
-    } else {
-        if(data != NULL) swizzle_process_upload(target, &format, &type);
-        pick_internalformat(&internalformat, &type, &format, &data);
+        return;
+    }
+
+    // No data, just initialization
+    if(data == NULL) {
+        make_format_non_generic(&internalformat, &type, &format);
+        pick_store_format(&internalformat, &type, &format);
         es3_functions.glTexImage2D(target, level, internalformat, width, height, border, format, type, data);
+        return;
+    }
+
+    // See if we can send off the data straight into the texture
+    GLenum ogtype = type, ogformat = format;
+    bool trivially_generic = !make_format_non_generic(&internalformat, &type, &format);
+    bool trivial_upload_params = !current_context->unpack.swap_bytes;
+    if(trivial_upload_params && trivially_generic && is_unpack_compatible(internalformat, format, type)) {
+        apply_unpack_state_to_hw(&current_context->unpack);
+        es3_functions.glTexImage2D(target, level, internalformat, width, height, border, format, type, data);
+        return;
+    }
+
+    // Otherwise, try converting
+    pick_store_format(&internalformat, &type, &format);
+    GLvoid* newdata = NULL;
+    convert_texture2d(ogtype, ogformat, width, height, data, type, format, &newdata);
+    if(newdata == NULL) {
+        printf("LTW WARN: did not convert %x %x -> %x %x, initializing with no data\n", ogtype, ogformat, type, format);
+        es3_functions.glTexImage2D(target, level, internalformat, width, height, 0, format, type, NULL);
+    }else {
+        apply_default_state_to_hw();
+        es3_functions.glTexImage2D(target, level, internalformat, width, height, 0, format, type, newdata);
+        free(newdata);
     }
 }
 
@@ -203,6 +231,31 @@ INTERNAL bool filter_params_float(GLenum target, GLenum pname, GLfloat param) {
     }
     return true;
 }
+
+static void remove_mipmaps(GLenum pname, GLint* param) {
+    if(pname != GL_TEXTURE_MIN_FILTER) return;
+    switch (*param) {
+        case GL_NEAREST_MIPMAP_NEAREST:
+        case GL_NEAREST_MIPMAP_LINEAR:
+            *param = GL_NEAREST;
+            break;
+        case GL_LINEAR_MIPMAP_NEAREST:
+        case GL_LINEAR_MIPMAP_LINEAR:
+            *param = GL_LINEAR;
+            break;
+    }
+}
+
+static void make_depthtex_nearest(GLenum target, GLenum pname, GLint *param) {
+    if(!current_context->es31) return;
+    if(pname != GL_TEXTURE_MIN_FILTER && pname != GL_TEXTURE_MAG_FILTER) return;
+    GLint depth_type = GL_NONE;
+    es3_functions.glGetTexLevelParameteriv(target, 0, GL_TEXTURE_DEPTH_TYPE, &depth_type);
+    if(depth_type != GL_NONE) {
+        *param = GL_NEAREST;
+    }
+}
+
 void glTexParameterf( 	GLenum target,
                          GLenum pname,
                          GLfloat param) {
@@ -217,7 +270,8 @@ void glTexParameteri( 	GLenum target,
     if(!current_context) return;
     if(!filter_params_integer(target, pname, param)) return;
     if(!filter_params_float(target, pname, (GLfloat)param)) return;
-    swizzle_process_swizzle_param(target, pname, &param);
+    //remove_mipmaps(pname, &param);
+    make_depthtex_nearest(target, pname, &param);
     es3_functions.glTexParameteri(target, pname, param);
 }
 
@@ -235,7 +289,8 @@ void glTexParameteriv( 	GLenum target,
     if(!current_context) return;
     if(!filter_params_integer(target, pname, *params)) return;
     if(!filter_params_float(target, pname, (GLfloat)*params)) return;
-    swizzle_process_swizzle_param(target, pname, params);
+    //remove_mipmaps(pname, params);
+    make_depthtex_nearest(target, pname, params);
     es3_functions.glTexParameteriv(target, pname, params);
 }
 static bool trigger_gltexparameteri = false;
@@ -250,7 +305,6 @@ void glTexParameterIiv( 	GLenum target,
         }
         return;
     }
-    swizzle_process_swizzle_param(target, pname, params);
 }
 
 void glTexParameterIuiv( 	GLenum target,
@@ -264,7 +318,6 @@ void glTexParameterIuiv( 	GLenum target,
         }
         return;
     }
-    swizzle_process_swizzle_param(target, pname, params);
 }
 
 void glRenderbufferStorage(	GLenum target,
@@ -478,10 +531,6 @@ void glDepthRange(GLdouble nearVal,
 void glDeleteTextures(GLsizei n, const GLuint *textures) {
     if(!current_context) return;
     es3_functions.glDeleteTextures(n, textures);
-    for(int i = 0; i < n; i++) {
-        void* tracker = unordered_map_remove(current_context->texture_swztrack_map, (void*)textures[i]);
-        free(tracker);
-    }
 }
 
 static bool buf_tex_trigger = false;
