@@ -7,7 +7,6 @@
 #include "egl.h"
 #include <stdbool.h>
 #include <stdio.h>
-#include "swizzle.h"
 #include "unpack.h"
 #include "glformats.h"
 #include "GL/gl.h"
