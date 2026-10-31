@@ -33,13 +33,12 @@ static bool init_context(context_t* tw_context) {
     if(!tw_context->framebuffer_map) goto fail_dealloc;
     tw_context->program_map = alloc_intmap_safe();
     if(!tw_context->program_map) goto fail_dealloc;
-    tw_context->texture_swztrack_map = alloc_intmap_safe();
-    if(!tw_context->texture_swztrack_map) goto fail_dealloc;
     for(int i = 0; i < MAX_BOUND_BASEBUFFERS; i++) {
         unordered_map *map = alloc_intmap_safe();
         if(!map) goto fail_dealloc;
         tw_context->bound_basebuffers[i] = map;
     }
+    tw_context->unpack.alignment = 4;
     return true;
 
     fail_dealloc:
@@ -53,8 +52,6 @@ static bool init_context(context_t* tw_context) {
         unordered_map_free(tw_context->framebuffer_map);
     if(tw_context->program_map)
         unordered_map_free(tw_context->program_map);
-    if(tw_context->texture_swztrack_map)
-        unordered_map_free(tw_context->texture_swztrack_map);
     fail:
     return false;
 }
@@ -63,7 +60,6 @@ static void free_context(context_t* tw_context) {
     unordered_map_free(tw_context->shader_map);
     unordered_map_free(tw_context->program_map);
     unordered_map_free(tw_context->framebuffer_map);
-    unordered_map_free(tw_context->texture_swztrack_map);
     if(tw_context->extensions_string != NULL) free(tw_context->extensions_string);
     if(tw_context->nextras != 0 && tw_context->extra_extensions_array != NULL) {
         for(int i = 0; i < tw_context->nextras; i++) {

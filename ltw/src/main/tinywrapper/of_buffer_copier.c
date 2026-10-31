@@ -7,7 +7,14 @@
 #include "egl.h"
 #include <stdbool.h>
 #include <stdio.h>
-#include "swizzle.h"
+#include "unpack.h"
+#include "glformats.h"
+#include "GL/gl.h"
+#include "main.h"
+
+
+#define LOGI(...) printf(__VA_ARGS__);
+
 void buffer_copier_init(context_t* context) {
     framebuffer_copier_t* copier = &context->framebuffer_copier;
     while(es3_functions.glGetError() != 0) {}
@@ -77,10 +84,10 @@ void glGetTexImage( 	GLenum target,
     es3_functions.glFramebufferRenderbuffer(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, 0);
     return;
     unsupported_esver:
-    printf("LTW: glGetTexImage only supported on OpenGL ES 3.1");
+    printf("LTW: glGetTexImage only supported on OpenGL ES 3.1\n");
     return;
     unsupported:
-    printf("LTW: unsupported parameters for glGetTexImage");
+    printf("LTW: unsupported parameters for glGetTexImage\n");
 }
 
 void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid * data) {
@@ -106,7 +113,6 @@ void glTexSubImage2D(GLenum target,
                      GLenum type,
                      const void * data) {
     if(!current_context) return;
-    swizzle_process_upload(target, &format, &type);
     if(format == GL_DEPTH_COMPONENT) {
         framebuffer_copier_t* copier = &current_context->framebuffer_copier;
         if(width == copier->depthWidth && height == copier->depthHeight && copier->depthData == data) {
@@ -114,7 +120,58 @@ void glTexSubImage2D(GLenum target,
             return;
         }
     }
-    es3_functions.glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, data);
+
+    // Can't get internal format on older versions, leave the user to pray that stars align and formats match
+    if(!current_context->es31) {
+        es3_functions.glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, data);
+        return;
+    }
+
+    // TODO: store this in LTW
+    GLint internalformat;
+    es3_functions.glGetTexLevelParameteriv(target, level, GL_TEXTURE_INTERNAL_FORMAT, &internalformat);
+
+    // Check if this upload is already compatible
+    bool trivial_upload_params = !current_context->unpack.swap_bytes;
+    if(trivial_upload_params && is_unpack_compatible(internalformat, format, type)) {
+        apply_unpack_state_to_hw(&current_context->unpack);
+        es3_functions.glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, data);
+        return;
+    }
+
+    // Otherwise convert
+    GLuint tgformat, tgtype;
+    pick_store_format_pure(internalformat, &tgtype, &tgformat);
+    GLvoid* newdata = NULL;
+
+    GLuint unpackPBOid = current_context->bound_buffers[get_buffer_index(GL_PIXEL_UNPACK_BUFFER)];
+    void* pbodata;
+    glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &unpackPBOid);
+    if (unpackPBOid != 0) {
+        GLint64 bufferSize = 0;
+        es3_functions.glGetBufferParameteri64v(GL_PIXEL_UNPACK_BUFFER, GL_BUFFER_SIZE, &bufferSize);
+        pbodata = glMapBufferRange(GL_PIXEL_UNPACK_BUFFER,0,bufferSize,GL_MAP_READ_BIT);
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+        convert_texture2d(type, format, width, height, pbodata, tgtype, tgformat, &newdata);
+        if(newdata == NULL) {
+            printf("LTW WARN: did not convert %x %x -> %x %x, upload skipped\n", type, format, tgtype, tgformat);
+            return;
+        }
+        apply_default_state_to_hw();
+        es3_functions.glTexSubImage2D(target, level, xoffset, yoffset, width, height, tgformat, tgtype, newdata);
+        free(newdata);
+        es3_functions.glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, unpackPBOid);
+        return;
+    }
+    convert_texture2d(type, format, width, height, data, tgtype, tgformat, &newdata);
+    if(newdata == NULL) {
+        printf("LTW WARN: did not convert %x %x -> %x %x, upload skipped\n", type, format, tgtype, tgformat);
+        return;
+    }
+    apply_default_state_to_hw();
+    es3_functions.glTexSubImage2D(target, level, xoffset, yoffset, width, height, tgformat, tgtype, newdata);
+    free(newdata);
 }
 
 void texture_blit_framebuffer(GLenum target,
