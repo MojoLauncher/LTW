@@ -679,6 +679,14 @@ IR_TO_GLSL::visit(ir_variable* ir)
 		return;
 	}
 
+    // keep invariant declaration for builtin variables
+    if (strstr(ir->name, "gl_") == ir->name)
+    {
+        generated_source.append("%s", (ir->data.invariant) ? "invariant " : "");
+        print_var_name(ir);
+        return;
+    }
+
     if(!ir->data.explicit_location && ir->data.mode == ir_var_shader_out && this->state->stage == MESA_SHADER_FRAGMENT) {
         generated_source.append("/* LTW INSERT LOCATION ");
         print_var_name(ir);
@@ -734,8 +742,7 @@ IR_TO_GLSL::visit(ir_variable* ir)
 	const char* const cent = (ir->data.centroid) ? "centroid " : "";
 	const char* const samp = (ir->data.sample) ? "sample " : "";
 	const char* const patc = (ir->data.patch) ? "patch " : "";
-	const char* const inv = (ir->data.invariant) ? "invariant " : "";
-	const char* const explicit_inv = (ir->data.explicit_invariant) ? "explicit_invariant " : "";
+	const char* const inv = (ir->data.invariant && ir->data.mode == ir_var_shader_out) ? "invariant " : "";
 	const char* const prec = (ir->data.precise) ? "precise " : "";
 	const char* const bindless = (ir->data.bindless) ? "bindless " : "";
 	const char* const bound = (ir->data.bound) ? "bound " : "";
@@ -757,17 +764,9 @@ IR_TO_GLSL::visit(ir_variable* ir)
     if(ir->type->is_image() && ir->data.precision == GLSL_PRECISION_NONE)
         ir->data.precision = GLSL_PRECISION_MEDIUM; // maybe try highp/lowp...
 
-	// keep invariant declaration for builtin variables
-	if (strstr(ir->name, "gl_") == ir->name)
-	{
-		generated_source.append("%s", inv);
-		print_var_name(ir);
-		return;
-	}
-
 	generated_source.append("%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",cent, bindless, bound,memory_read_only, memory_write_only,
 		memory_coherent, memory_volatile, memory_restrict,
-		samp, patc, inv, explicit_inv, prec, interp[ir->data.interpolation], mode[decormode][ir->data.mode],
+		samp, patc, inv, "", prec, interp[ir->data.interpolation], mode[decormode][ir->data.mode],
 		precision[ir->data.precision]);
 
 	print_type(generated_source, ir->type, false);
